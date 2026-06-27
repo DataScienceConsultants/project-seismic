@@ -1,0 +1,1 @@
+// Future home status rendering.

@@ -1,0 +1,18 @@
+.leaflet-container {
+  font-family: Inter, system-ui, sans-serif;
+  background: var(--color-background);
+}
+
+.leaflet-control-zoom a {
+  color: var(--color-text-primary) !important;
+  background: var(--color-surface-glass) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+}
+
+.leaflet-popup-content p { margin: 6px 0; }

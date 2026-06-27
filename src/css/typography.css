@@ -1,0 +1,43 @@
+body {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--color-text-primary);
+  background: var(--color-background);
+}
+
+h1, h2, h3, p { margin-top: 0; }
+
+h1 {
+  margin-bottom: 0;
+  font-size: clamp(2.5rem, 12vw, 4rem);
+  line-height: 0.9;
+  letter-spacing: -0.08em;
+  font-weight: 800;
+}
+
+h2 {
+  margin-bottom: var(--space-3);
+  font-size: clamp(2rem, 9vw, 3.2rem);
+  line-height: 0.95;
+  letter-spacing: -0.08em;
+  font-weight: 800;
+}
+
+h3 {
+  margin-bottom: 0;
+  font-size: 1.25rem;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+
+p { color: var(--color-text-secondary); line-height: 1.5; }
+
+.eyebrow {
+  margin-bottom: var(--space-2);
+  color: var(--color-accent);
+  font-size: 0.7rem;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 800;
+}

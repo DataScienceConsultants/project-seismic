@@ -1,0 +1,10 @@
+{
+  "name": "EQ Tracker",
+  "short_name": "EQ Tracker",
+  "description": "A calm, mobile-first earthquake awareness app.",
+  "start_url": "../src/index.html",
+  "display": "standalone",
+  "background_color": "#0B0B0D",
+  "theme_color": "#0B0B0D",
+  "icons": []
+}

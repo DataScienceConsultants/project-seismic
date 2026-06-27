@@ -1,0 +1,6 @@
+*, *::before, *::after { box-sizing: border-box; }
+html { min-height: 100%; -webkit-text-size-adjust: 100%; }
+body { min-height: 100%; margin: 0; }
+button, select, input, textarea { font: inherit; }
+button { cursor: pointer; }
+img, svg { display: block; max-width: 100%; }
