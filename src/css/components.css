@@ -152,6 +152,149 @@
 }
 
 /* =====================================================
+   Safety Alerts Card
+===================================================== */
+
+.safety-alert-card {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: var(--space-5);
+  padding: clamp(20px, 4vw, 28px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.07),
+      rgba(255, 255, 255, 0.03)
+    );
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(24px);
+}
+
+.safety-alert-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.safety-alert-card[data-status="green"]::before {
+  background: #43c58a;
+}
+
+.safety-alert-card[data-status="yellow"]::before {
+  background: #f5b547;
+}
+
+.safety-alert-card[data-status="orange"]::before {
+  background: #ff8a3d;
+}
+
+.safety-alert-card[data-status="red"]::before {
+  background: #ff5a5a;
+}
+
+.safety-alert-card[data-status="blue"]::before {
+  background: #4fa8ff;
+}
+
+.safety-alert-card[data-status="neutral"]::before {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.safety-alert-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.safety-alert-header .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+#safetyAlertBadge {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.safety-alert-meta {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.safety-alert-title {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-primary);
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+}
+
+.safety-alert-message {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+
+.safety-alert-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.safety-alert-source {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.safety-alert-link {
+  flex: 0 0 auto;
+  color: var(--color-accent);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.safety-alert-link:hover {
+  text-decoration: underline;
+}
+
+.safety-alert-link[hidden] {
+  display: none;
+}
+
+.safety-alert-disclaimer {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+/* =====================================================
    Bottom Sheet
 ===================================================== */
 
@@ -290,6 +433,22 @@ select {
 }
 
 /* =====================================================
+   Footer
+===================================================== */
+
+.app-footer {
+  padding: var(--space-5) var(--space-2) var(--space-2);
+}
+
+.app-footer p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+/* =====================================================
    Mobile
 ===================================================== */
 
@@ -308,6 +467,30 @@ select {
 
   .metric small {
     font-size: 0.66rem;
+  }
+
+  .safety-alert-card {
+    padding: 20px;
+  }
+
+  .safety-alert-header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .safety-alert-meta {
+    max-width: 120px;
+    white-space: normal;
+  }
+
+  .safety-alert-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .safety-alert-link {
+    align-self: flex-start;
   }
 
   .earthquake-card {
