@@ -8,7 +8,7 @@ import {
 
 import { renderEarthquakeCards } from "./ui/cards.js";
 import { getCurrentPosition } from "./services/geolocation.js";
-import { fetchTsunamiStatus } from "./services/tsunami.js";
+import { fetchTsunamiStatus } from "./api/tsunami.js";
 import { getStatus } from "./status/statusEngine.js";
 import { formatTime } from "./utils/helpers.js";
 
