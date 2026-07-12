@@ -34,7 +34,21 @@ export function renderEarthquakeMarkers(map, earthquakes) {
       const magnitude = Number(feature.properties.mag) || 0;
       const place = feature.properties.place || "Unknown location";
 
-      layer.bindPopup(`<strong>M ${magnitude.toFixed(1)}</strong><br>${place}`);
+      layer.bindPopup(`
+    <div class="quake-popup">
+        <div class="popup-mag">
+            M ${magnitude.toFixed(1)}
+        </div>
+
+        <div class="popup-place">
+            📍 ${place}
+        </div>
+
+        <div class="popup-time">
+            🕒 ${formattedTime}
+        </div>
+    </div>
+`);
     }
   }).addTo(map);
 
