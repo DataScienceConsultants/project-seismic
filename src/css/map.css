@@ -1,7 +1,15 @@
+/* =====================================================
+   Leaflet Map
+===================================================== */
+
 .leaflet-container {
   font-family: Inter, system-ui, sans-serif;
   background: var(--color-background);
 }
+
+/* =====================================================
+   Zoom Controls
+===================================================== */
 
 .leaflet-control-zoom a {
   color: var(--color-text-primary) !important;
@@ -9,14 +17,28 @@
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
+/* =====================================================
+   Popup
+===================================================== */
+
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   color: var(--color-text-primary);
   background: var(--color-surface);
 }
 
-.leaflet-popup-content p { margin: 6px 0; }
-/* ---------- Earthquake Popup ---------- */
+.leaflet-popup-content {
+  margin: 14px 16px;
+  line-height: 1.5;
+}
+
+.leaflet-popup-content p {
+  margin: 6px 0;
+}
+
+/* =====================================================
+   Earthquake Popup
+===================================================== */
 
 .quake-popup {
   min-width: 220px;
@@ -35,29 +57,83 @@
   margin-bottom: 8px;
 }
 
-.popup-depth {
-  margin-top: 6px;
-  color: var(--color-text-secondary);
-  font-size: 0.88rem;
-}
-
 .popup-time {
   color: var(--color-accent);
   font-size: 0.9rem;
   font-weight: 500;
 }
 
-/* Improve Leaflet popup spacing */
-
-.leaflet-popup-content {
-  margin: 14px 16px;
-  line-height: 1.5;
+.popup-depth {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
 }
 
-/* Add user loacation */
+/* =====================================================
+   User Location Popup
+===================================================== */
 
 .user-location-popup {
+  text-align: center;
   color: var(--color-text-primary);
   font-size: 0.95rem;
-  text-align: center;
+}
+
+/* =====================================================
+   User Location Marker
+===================================================== */
+
+/* Remove Leaflet's default white square */
+
+.user-marker.leaflet-div-icon {
+  background: transparent;
+  border: none;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+/* Perfectly center the star */
+
+.user-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+
+  font-size: 30px;
+  line-height: 1;
+
+  transform: translate(-50%, -50%);
+
+  cursor: pointer;
+  user-select: none;
+
+  filter:
+    drop-shadow(0 0 4px rgba(255, 215, 0, .95))
+    drop-shadow(0 0 10px rgba(255, 215, 0, .70))
+    drop-shadow(0 0 18px rgba(255, 215, 0, .35));
+
+  animation: starPulse 2.5s ease-in-out infinite;
+}
+
+/* =====================================================
+   Star Animation
+===================================================== */
+
+@keyframes starPulse {
+
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.18);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
 }
