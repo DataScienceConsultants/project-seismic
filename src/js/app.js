@@ -1,7 +1,11 @@
 import { fetchEarthquakes } from "./api/usgs.js";
 import { createMap } from "./map/map.js";
-import { renderEarthquakeMarkers } from "./map/markers.js";
+import {
+  renderEarthquakeMarkers,
+  renderUserLocation
+} from "./map/markers.js";
 import { renderEarthquakeCards } from "./ui/cards.js";
+import { getCurrentPosition } from "./services/geolocation.js";
 import { formatTime } from "./utils/helpers.js";
 
 const timeRange = document.getElementById("timeRange");
@@ -19,6 +23,7 @@ function filterEarthquakes() {
 
   return currentEarthquakes.filter(feature => {
     const magnitude = Number(feature.properties.mag);
+
     return Number.isFinite(magnitude) && magnitude >= minMagnitude;
   });
 }
@@ -42,7 +47,9 @@ async function loadEarthquakes() {
     lastUpdated.textContent = "Updating...";
 
     const data = await fetchEarthquakes(timeRange.value);
-    currentEarthquakes = Array.isArray(data.features) ? data.features : [];
+    currentEarthquakes = Array.isArray(data.features)
+      ? data.features
+      : [];
 
     lastUpdated.textContent = `Updated ${formatTime(data.metadata.generated)}`;
     statusSubtext.textContent = "Live earthquake data loaded from USGS.";
@@ -55,6 +62,16 @@ async function loadEarthquakes() {
   }
 }
 
+async function loadUserLocation() {
+  try {
+    const position = await getCurrentPosition();
+
+    renderUserLocation(map, position);
+  } catch (error) {
+    console.warn("Location unavailable:", error.message);
+  }
+}
+
 function initialize() {
   map = createMap();
 
@@ -62,6 +79,7 @@ function initialize() {
   magnitudeFilter.addEventListener("change", render);
 
   loadEarthquakes();
+  loadUserLocation();
 }
 
 initialize();
