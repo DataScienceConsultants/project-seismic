@@ -47,7 +47,7 @@ export function renderEarthquakeMarkers(map, earthquakes) {
   layer.bindPopup(`
   <div class="quake-popup">
     <div class="popup-mag">
-      M ${magnitude.toFixed(1)}
+      🌎 M ${magnitude.toFixed(1)}
     </div>
 
     <div class="popup-place">
