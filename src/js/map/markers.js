@@ -36,19 +36,20 @@ export function renderUserLocation(map, position) {
     weight: 1
   }).addTo(map);
 
-  userLocationMarker = L.circleMarker(userLatLng, {
-    radius: 8,
-    color: "#ffffff",
-    weight: 3,
-    fillColor: "#4FA8FF",
-    fillOpacity: 1
+  userLocationMarker = L.marker(userLatLng, {
+  icon: L.divIcon({
+    className: "user-marker",
+    html: "⭐",
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
   })
-    .bindPopup(`
-      <div class="user-location-popup">
-        <strong>You are here</strong>
-      </div>
-    `)
-    .addTo(map);
+})
+.bindPopup(`
+  <div class="user-location-popup">
+    ⭐ <strong>You are here</strong>
+  </div>
+`)
+.addTo(map);
 
   map.flyTo(userLatLng, Math.max(map.getZoom(), 7), {
     duration: 1.2
