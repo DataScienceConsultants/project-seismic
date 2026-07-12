@@ -41,3 +41,9 @@ p { color: var(--color-text-secondary); line-height: 1.5; }
   text-transform: uppercase;
   font-weight: 800;
 }
+.app-tagline {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
