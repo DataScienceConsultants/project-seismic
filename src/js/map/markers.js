@@ -36,20 +36,19 @@ export function renderUserLocation(map, position) {
     weight: 1
   }).addTo(map);
 
-  userLocationMarker = L.marker(userLatLng, {
-  icon: L.divIcon({
-    className: "user-marker",
-    html: "⭐",
-    iconSize: [36, 36],
-    iconAnchor: [18, 18]
-  })
+  userLocationMarker = L.circleMarker(userLatLng, {
+  radius: 8,
+  color: "#ffffff",
+  weight: 3,
+  fillColor: "#4FA8FF",
+  fillOpacity: 1
 })
-.bindPopup(`
-  <div class="user-location-popup">
-    ⭐ <strong>You are here</strong>
-  </div>
-`)
-.addTo(map);
+  .bindPopup(`
+    <div class="user-location-popup">
+      <strong>You are here</strong>
+    </div>
+  `)
+  .addTo(map);
 
   map.flyTo(userLatLng, Math.max(map.getZoom(), 7), {
     duration: 1.2
@@ -58,24 +57,40 @@ export function renderUserLocation(map, position) {
   return userLatLng;
 }
 
-export function renderEarthquakeMarkers(map, earthquakes) {
+export function renderEarthquakeMarkers(
+  map,
+  earthquakes,
+  closestEarthquakeId = null
+  ) {
+  
   if (earthquakeLayer) {
     map.removeLayer(earthquakeLayer);
   }
 
   earthquakeLayer = L.geoJSON(earthquakes, {
     pointToLayer(feature, latlng) {
-      const magnitude = Number(feature.properties.mag) || 0;
+  const magnitude = Number(feature.properties.mag) || 0;
+  const isClosest = feature.id === closestEarthquakeId;
 
-      return L.circle(latlng, {
-        radius: getMagnitudeRadius(magnitude),
-        fillColor: getMagnitudeColor(magnitude),
-        fillOpacity: 0.75,
-        color: getMagnitudeColor(magnitude),
-        weight: 1.2
-      });
-    },
+  if (isClosest) {
+    return L.marker(latlng, {
+      icon: L.divIcon({
+        className: "closest-quake-marker",
+        html: "⭐",
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+      })
+    });
+  }
 
+  return L.circle(latlng, {
+    radius: getMagnitudeRadius(magnitude),
+    fillColor: getMagnitudeColor(magnitude),
+    fillOpacity: 0.75,
+    color: getMagnitudeColor(magnitude),
+    weight: 1.2
+  });
+},
     onEachFeature(feature, layer) {
       const magnitude = Number(feature.properties.mag) || 0;
       const place = feature.properties.place || "Unknown location";
