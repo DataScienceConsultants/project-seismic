@@ -107,3 +107,10 @@ select {
 .earthquake-card strong { display: block; margin-bottom: var(--space-1); }
 
 .earthquake-card small { color: var(--color-text-muted); line-height: 1.35; }
+
+.app-tagline {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
