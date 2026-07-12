@@ -33,6 +33,7 @@ export function renderEarthquakeMarkers(map, earthquakes) {
     onEachFeature(feature, layer) {
   const magnitude = Number(feature.properties.mag) || 0;
   const place = feature.properties.place || "Unknown location";
+  const depth = Number(feature.geometry.coordinates[2]) || 0;    
   const eventTime = new Date(feature.properties.time);
 
   const formattedTime = eventTime.toLocaleString([], {
@@ -44,20 +45,24 @@ export function renderEarthquakeMarkers(map, earthquakes) {
   });
 
   layer.bindPopup(`
-    <div class="quake-popup">
-      <div class="popup-mag">
-        M ${magnitude.toFixed(1)}
-      </div>
-
-      <div class="popup-place">
-        📍 ${place}
-      </div>
-
-      <div class="popup-time">
-        🕒 ${formattedTime}
-      </div>
+  <div class="quake-popup">
+    <div class="popup-mag">
+      M ${magnitude.toFixed(1)}
     </div>
-  `);
+
+    <div class="popup-place">
+      📍 ${place}
+    </div>
+
+    <div class="popup-time">
+      🕒 ${formattedTime}
+    </div>
+
+    <div class="popup-depth">
+      ↕ Depth: ${depth.toFixed(1)} km
+    </div>
+  </div>
+`);
 }
   }).addTo(map);
 
