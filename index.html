@@ -1,38 +1,181 @@
-<!-- Personal Status -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<section
-  class="status-card"
-  id="statusCard"
-  data-status="neutral"
-  aria-labelledby="statusHeadline"
->
-  <p class="eyebrow">
-    <span id="statusBadge" aria-hidden="true">○</span>
-    Your current status
-  </p>
+  <title>Project Seismic</title>
 
-  <h2 id="statusHeadline">
-    Checking current activity…
-  </h2>
+  <meta
+    name="description"
+    content="Personalized earthquake awareness that helps you understand what seismic activity means for you."
+  />
 
-  <p id="statusSubtext">
-    Loading earthquake data and determining what is closest to you.
-  </p>
+  <meta name="theme-color" content="#0B0B0D" />
 
-  <div class="status-metrics">
-    <div class="metric">
-      <span id="nearestMagnitude">--</span>
-      <small>Magnitude</small>
-    </div>
+  <link rel="manifest" href="public/manifest.json" />
 
-    <div class="metric">
-      <span id="nearestDistance">--</span>
-      <small>Distance</small>
-    </div>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <div class="metric">
-      <span id="nearestTime">--</span>
-      <small>Occurred</small>
-    </div>
-  </div>
-</section>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <!-- Project CSS -->
+  <link rel="stylesheet" href="src/css/reset.css" />
+  <link rel="stylesheet" href="src/css/variables.css" />
+  <link rel="stylesheet" href="src/css/typography.css" />
+  <link rel="stylesheet" href="src/css/layout.css" />
+  <link rel="stylesheet" href="src/css/components.css" />
+  <link rel="stylesheet" href="src/css/animations.css" />
+  <link rel="stylesheet" href="src/css/map.css" />
+</head>
+
+<body>
+
+  <main class="app-shell">
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Personalized earthquake awareness</p>
+
+        <h1>Project Seismic</h1>
+
+        <p class="app-tagline">
+          Earthquake information that matters to you.
+        </p>
+      </div>
+    </header>
+
+    <!-- ================= STATUS ================= -->
+
+    <section
+      class="status-card"
+      id="statusCard"
+      data-status="neutral"
+      aria-labelledby="statusHeadline"
+    >
+
+      <p class="eyebrow">
+        <span id="statusBadge" aria-hidden="true">○</span>
+        Your current status
+      </p>
+
+      <h2 id="statusHeadline">
+        Checking current activity…
+      </h2>
+
+      <p id="statusSubtext">
+        Loading earthquake data and determining what is closest to you.
+      </p>
+
+      <div class="status-metrics">
+
+        <div class="metric">
+          <span id="nearestMagnitude">--</span>
+          <small>Magnitude</small>
+        </div>
+
+        <div class="metric">
+          <span id="nearestDistance">--</span>
+          <small>Distance</small>
+        </div>
+
+        <div class="metric">
+          <span id="nearestTime">--</span>
+          <small>Occurred</small>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= MAP ================= -->
+
+    <section
+      class="map-panel"
+      aria-label="Earthquake map"
+    >
+      <div id="map"></div>
+    </section>
+
+    <!-- ================= BOTTOM SHEET ================= -->
+
+    <section class="bottom-sheet">
+
+      <div class="sheet-handle"></div>
+
+      <div class="sheet-header">
+
+        <div>
+          <p class="eyebrow">Recent activity</p>
+          <h3>Earthquakes</h3>
+        </div>
+
+        <span id="lastUpdated">
+          Updating...
+        </span>
+
+      </div>
+
+      <!-- Filters -->
+
+      <div class="filters">
+
+        <label for="timeRange">
+          Time Range
+
+          <select id="timeRange">
+            <option value="hour">
+              Last Hour
+            </option>
+
+            <option value="day">
+              Last 24 Hours
+            </option>
+
+            <option value="week" selected>
+              Last 7 Days
+            </option>
+
+            <option value="month">
+              Last 30 Days
+            </option>
+
+          </select>
+
+        </label>
+
+        <label for="magnitudeFilter">
+          Minimum Magnitude
+
+          <select id="magnitudeFilter">
+
+            <option value="0" selected>
+              All
+            </option>
+
+            <option value="2.5">
+              2.5+
+            </option>
+
+            <option value="4.5">
+              4.5+
+            </option>
+
+            <option value="6">
+              6.0+
+            </option>
+
+          </
