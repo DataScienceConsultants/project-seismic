@@ -35,6 +35,12 @@
   margin-bottom: 8px;
 }
 
+.popup-depth {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+}
+
 .popup-time {
   color: var(--color-accent);
   font-size: 0.9rem;
@@ -47,3 +53,4 @@
   margin: 14px 16px;
   line-height: 1.5;
 }
+
