@@ -11,14 +11,24 @@ import { formatTime } from "./utils/helpers.js";
 const timeRange = document.getElementById("timeRange");
 const magnitudeFilter = document.getElementById("magnitudeFilter");
 const earthquakeList = document.getElementById("earthquakeList");
-const totalEvents = document.getElementById("totalEvents");
-const lastUpdated = document.getElementById("lastUpdated");
+
+const statusHeadline = document.getElementById("statusHeadline");
 const statusSubtext = document.getElementById("statusSubtext");
+
+const nearestMagnitude = document.getElementById("nearestMagnitude");
+const nearestDistance = document.getElementById("nearestDistance");
+const totalEvents = document.getElementById("totalEvents");
+
+const lastUpdated = document.getElementById("lastUpdated");
 
 let map;
 let currentEarthquakes = [];
 let userCoordinates = null;
 
+/*
+ * Calculates the distance between two coordinates
+ * using the Haversine formula.
+ */
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const earthRadiusKm = 6371;
   const toRadians = value => value * Math.PI / 180;
@@ -41,6 +51,9 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return earthRadiusKm * c;
 }
 
+/*
+ * Finds the earthquake closest to the user's location.
+ */
 function findClosestEarthquake(earthquakes) {
   if (!userCoordinates || earthquakes.length === 0) {
     return null;
@@ -81,24 +94,116 @@ function findClosestEarthquake(earthquakes) {
   }, null);
 }
 
+/*
+ * Filters the earthquake feed using the selected
+ * minimum magnitude.
+ */
 function filterEarthquakes() {
   const minMagnitude = Number(magnitudeFilter.value);
 
   return currentEarthquakes.filter(feature => {
-    const magnitude = Number(feature.properties.mag);
+    const magnitude = Number(feature.properties?.mag);
 
-    return Number.isFinite(magnitude) && magnitude >= minMagnitude;
+    return (
+      Number.isFinite(magnitude) &&
+      magnitude >= minMagnitude
+    );
   });
 }
 
+/*
+ * Updates the personalized status card.
+ */
+function updateStatusCard(filteredEarthquakes, closestResult) {
+  totalEvents.textContent = filteredEarthquakes.length;
+
+  if (filteredEarthquakes.length === 0) {
+    nearestMagnitude.textContent = "--";
+    nearestDistance.textContent = "--";
+
+    statusHeadline.textContent =
+      "No earthquakes match your filters";
+
+    statusSubtext.textContent =
+      "Try selecting a longer time range or a lower minimum magnitude.";
+
+    return;
+  }
+
+  if (!userCoordinates) {
+    nearestMagnitude.textContent = "--";
+    nearestDistance.textContent = "--";
+
+    statusHeadline.textContent =
+      "Live earthquake activity loaded";
+
+    statusSubtext.textContent =
+      "Your location is unavailable, so distance and nearest-event information cannot be calculated.";
+
+    return;
+  }
+
+  if (!closestResult) {
+    nearestMagnitude.textContent = "--";
+    nearestDistance.textContent = "--";
+
+    statusHeadline.textContent =
+      "Unable to determine the nearest earthquake";
+
+    statusSubtext.textContent =
+      "The earthquake feed loaded, but location information was incomplete.";
+
+    return;
+  }
+
+  const magnitude =
+    Number(closestResult.earthquake.properties?.mag) || 0;
+
+  const distance = Math.round(closestResult.distance);
+  const place =
+    closestResult.earthquake.properties?.place ||
+    "an unknown location";
+
+  nearestMagnitude.textContent =
+    `M ${magnitude.toFixed(1)}`;
+
+  nearestDistance.textContent =
+    `${distance} km`;
+
+  if (distance <= 50 && magnitude >= 4.5) {
+    statusHeadline.textContent =
+      "Notable earthquake close to your location";
+  } else if (distance <= 100) {
+    statusHeadline.textContent =
+      "Earthquake activity near your location";
+  } else if (distance <= 300) {
+    statusHeadline.textContent =
+      "Earthquake activity in your wider region";
+  } else {
+    statusHeadline.textContent =
+      "No nearby earthquakes in this view";
+  }
+
+  statusSubtext.textContent =
+    `The closest listed event is magnitude ${magnitude.toFixed(1)}, approximately ${distance} km away near ${place}.`;
+}
+
+/*
+ * Renders the map markers, earthquake cards,
+ * totals, distance, and personalized status.
+ */
 function render() {
   const filteredEarthquakes = filterEarthquakes();
-  const closestResult = findClosestEarthquake(filteredEarthquakes);
+  const closestResult =
+    findClosestEarthquake(filteredEarthquakes);
 
   const closestEarthquakeId =
     closestResult?.earthquake?.id || null;
 
-  totalEvents.textContent = filteredEarthquakes.length;
+  updateStatusCard(
+    filteredEarthquakes,
+    closestResult
+  );
 
   renderEarthquakeMarkers(
     map,
@@ -114,41 +219,65 @@ function render() {
   console.log({
     loaded: currentEarthquakes.length,
     filtered: filteredEarthquakes.length,
-    closestDistance: closestResult?.distance ?? null,
+    closestDistance:
+      closestResult?.distance ?? null,
     closestEarthquakeId
   });
 }
 
+/*
+ * Loads current earthquake information from USGS.
+ */
 async function loadEarthquakes() {
   try {
-    lastUpdated.textContent = "Updating...";
+    lastUpdated.textContent = "Updating…";
 
-    const data = await fetchEarthquakes(timeRange.value);
+    statusHeadline.textContent =
+      "Checking current activity…";
 
-    currentEarthquakes = Array.isArray(data.features)
-      ? data.features
-      : [];
+    statusSubtext.textContent =
+      "Loading earthquake data and determining what is closest to you.";
+
+    const data =
+      await fetchEarthquakes(timeRange.value);
+
+    currentEarthquakes =
+      Array.isArray(data.features)
+        ? data.features
+        : [];
 
     lastUpdated.textContent =
       `Updated ${formatTime(data.metadata.generated)}`;
-
-    statusSubtext.textContent =
-      "Live earthquake data loaded from USGS.";
 
     render();
   } catch (error) {
     console.error(error);
 
-    statusSubtext.textContent =
-      "Unable to load earthquake data.";
+    currentEarthquakes = [];
 
-    lastUpdated.textContent = "Update failed";
+    statusHeadline.textContent =
+      "Earthquake data is unavailable";
+
+    statusSubtext.textContent =
+      "Project Seismic could not connect to the earthquake feed. Please try again later.";
+
+    nearestMagnitude.textContent = "--";
+    nearestDistance.textContent = "--";
+    totalEvents.textContent = "--";
+
+    lastUpdated.textContent =
+      "Update failed";
   }
 }
 
+/*
+ * Requests the user's location and adds the
+ * blue location marker to the map.
+ */
 async function loadUserLocation() {
   try {
-    const position = await getCurrentPosition();
+    const position =
+      await getCurrentPosition();
 
     userCoordinates = {
       latitude: position.coords.latitude,
@@ -161,15 +290,34 @@ async function loadUserLocation() {
       render();
     }
   } catch (error) {
-    console.warn("Location unavailable:", error.message);
+    console.warn(
+      "Location unavailable:",
+      error.message
+    );
+
+    userCoordinates = null;
+
+    if (currentEarthquakes.length > 0) {
+      render();
+    }
   }
 }
 
+/*
+ * Starts the application.
+ */
 function initialize() {
   map = createMap();
 
-  timeRange.addEventListener("change", loadEarthquakes);
-  magnitudeFilter.addEventListener("change", render);
+  timeRange.addEventListener(
+    "change",
+    loadEarthquakes
+  );
+
+  magnitudeFilter.addEventListener(
+    "change",
+    render
+  );
 
   loadEarthquakes();
   loadUserLocation();
