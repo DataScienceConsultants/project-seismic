@@ -4,17 +4,29 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>EQ Tracker</title>
-  <meta name="description" content="A calm, mobile-first earthquake awareness app." />
+  <title>Project Seismic</title>
+
+  <meta
+    name="description"
+    content="Personalized earthquake awareness that helps you understand what seismic activity means for you."
+  />
+
   <meta name="theme-color" content="#0B0B0D" />
 
-  <link rel="manifest" href="../public/manifest.json" />
+  <link rel="manifest" href="public/manifest.json" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
 
   <link rel="stylesheet" href="src/css/reset.css" />
   <link rel="stylesheet" href="src/css/variables.css" />
@@ -27,29 +39,59 @@
 
 <body>
   <main class="app-shell">
+
+    <!-- App Header -->
+
     <header class="app-header">
       <div>
-        <p class="eyebrow">Live earthquake awareness</p>
-        <h1>EQ Tracker</h1>
+        <p class="eyebrow">Personalized earthquake awareness</p>
+        <h1>Project Seismic</h1>
+        <p class="app-tagline">
+          Earthquake information that matters to you.
+        </p>
       </div>
-      <button class="button button-secondary" id="locationButton" type="button">Use My Location</button>
     </header>
 
-    <section class="status-card">
-      <p class="eyebrow">Current status</p>
-      <h2 id="statusHeadline">No significant activity nearby</h2>
-      <p id="statusSubtext">Loading recent earthquake data from official sources.</p>
+    <!-- Personal Status -->
+
+    <section class="status-card" aria-labelledby="statusHeadline">
+      <p class="eyebrow">Your current status</p>
+
+      <h2 id="statusHeadline">
+        Checking current activity…
+      </h2>
+
+      <p id="statusSubtext">
+        Loading earthquake data and determining what is closest to you.
+      </p>
 
       <div class="status-metrics">
-        <div class="metric"><span id="nearestMagnitude">--</span><small>Nearest</small></div>
-        <div class="metric"><span id="nearestDistance">--</span><small>Distance</small></div>
-        <div class="metric"><span id="totalEvents">--</span><small>Events</small></div>
+
+        <div class="metric">
+          <span id="nearestMagnitude">--</span>
+          <small>Nearest quake</small>
+        </div>
+
+        <div class="metric">
+          <span id="nearestDistance">--</span>
+          <small>From you</small>
+        </div>
+
+        <div class="metric">
+          <span id="totalEvents">--</span>
+          <small>Recent events</small>
+        </div>
+
       </div>
     </section>
 
-    <section class="map-panel">
+    <!-- Map -->
+
+    <section class="map-panel" aria-label="Earthquake map">
       <div id="map"></div>
     </section>
+
+    <!-- Recent Activity -->
 
     <section class="bottom-sheet">
       <div class="sheet-handle"></div>
@@ -59,11 +101,17 @@
           <p class="eyebrow">Recent activity</p>
           <h3>Earthquakes</h3>
         </div>
-        <span id="lastUpdated">Updating...</span>
+
+        <span id="lastUpdated">Updating…</span>
       </div>
 
+      <!-- Filters -->
+
       <div class="filters">
-        <label>Time
+
+        <label for="timeRange">
+          Time range
+
           <select id="timeRange">
             <option value="hour">Last hour</option>
             <option value="day">Last 24 hours</option>
@@ -72,7 +120,9 @@
           </select>
         </label>
 
-        <label>Magnitude
+        <label for="magnitudeFilter">
+          Minimum magnitude
+
           <select id="magnitudeFilter">
             <option value="0" selected>All</option>
             <option value="2.5">2.5+</option>
@@ -80,10 +130,19 @@
             <option value="6">6.0+</option>
           </select>
         </label>
+
       </div>
 
-      <div id="earthquakeList" class="earthquake-list"></div>
+      <!-- Earthquake Cards -->
+
+      <div
+        id="earthquakeList"
+        class="earthquake-list"
+        aria-live="polite"
+      ></div>
+
     </section>
+
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
