@@ -31,25 +31,34 @@ export function renderEarthquakeMarkers(map, earthquakes) {
     },
 
     onEachFeature(feature, layer) {
-      const magnitude = Number(feature.properties.mag) || 0;
-      const place = feature.properties.place || "Unknown location";
+  const magnitude = Number(feature.properties.mag) || 0;
+  const place = feature.properties.place || "Unknown location";
+  const eventTime = new Date(feature.properties.time);
 
-      layer.bindPopup(`
+  const formattedTime = eventTime.toLocaleString([], {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+
+  layer.bindPopup(`
     <div class="quake-popup">
-        <div class="popup-mag">
-            M ${magnitude.toFixed(1)}
-        </div>
+      <div class="popup-mag">
+        M ${magnitude.toFixed(1)}
+      </div>
 
-        <div class="popup-place">
-            📍 ${place}
-        </div>
+      <div class="popup-place">
+        📍 ${place}
+      </div>
 
-        <div class="popup-time">
-            🕒 ${formattedTime}
-        </div>
+      <div class="popup-time">
+        🕒 ${formattedTime}
+      </div>
     </div>
-`);
-    }
+  `);
+}
   }).addTo(map);
 
   return earthquakeLayer;
