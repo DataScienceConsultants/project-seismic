@@ -1,11 +1,14 @@
+const ALERT_PROXY_BASE_URL =
+  "https://project-seismic-alerts.jennis-m-vicente.workers.dev";
+
 const TSUNAMI_FEEDS = [
   {
     provider: "National Tsunami Warning Center",
-    url: "https://www.tsunami.gov/events/xml/PAAQCAP.xml"
+    url: `${ALERT_PROXY_BASE_URL}/ntwc`
   },
   {
     provider: "Pacific Tsunami Warning Center",
-    url: "https://www.tsunami.gov/events/xml/PHEBCAP.xml"
+    url: `${ALERT_PROXY_BASE_URL}/ptwc`
   }
 ];
 
@@ -20,19 +23,35 @@ const ALERT_PRIORITY = {
 };
 
 function getElementsByLocalName(parent, localName) {
-  return Array.from(parent.getElementsByTagName("*"))
-    .filter(element => element.localName === localName);
+  return Array.from(
+    parent.getElementsByTagName("*")
+  ).filter(
+    element =>
+      element.localName === localName
+  );
 }
 
 function getFirstText(parent, localName) {
-  const element = getElementsByLocalName(parent, localName)[0];
+  const element =
+    getElementsByLocalName(
+      parent,
+      localName
+    )[0];
 
-  return element?.textContent?.trim() || "";
+  return (
+    element?.textContent?.trim() || ""
+  );
 }
 
 function getAllText(parent, localName) {
-  return getElementsByLocalName(parent, localName)
-    .map(element => element.textContent?.trim())
+  return getElementsByLocalName(
+    parent,
+    localName
+  )
+    .map(
+      element =>
+        element.textContent?.trim()
+    )
     .filter(Boolean);
 }
 
@@ -96,13 +115,22 @@ function determineAlertType({
 
 function isOperationalAlert(alertElement) {
   const status =
-    getFirstText(alertElement, "status").toLowerCase();
+    getFirstText(
+      alertElement,
+      "status"
+    ).toLowerCase();
 
   const scope =
-    getFirstText(alertElement, "scope").toLowerCase();
+    getFirstText(
+      alertElement,
+      "scope"
+    ).toLowerCase();
 
   const messageType =
-    getFirstText(alertElement, "msgType").toLowerCase();
+    getFirstText(
+      alertElement,
+      "msgType"
+    ).toLowerCase();
 
   const disallowedStatuses = [
     "test",
@@ -110,7 +138,9 @@ function isOperationalAlert(alertElement) {
     "draft"
   ];
 
-  if (disallowedStatuses.includes(status)) {
+  if (
+    disallowedStatuses.includes(status)
+  ) {
     return false;
   }
 
@@ -130,7 +160,9 @@ function isExpired(expiresAt) {
     return false;
   }
 
-  return expiresAt.getTime() <= Date.now();
+  return (
+    expiresAt.getTime() <= Date.now()
+  );
 }
 
 function parseAlertElement(
@@ -150,8 +182,10 @@ function parseAlertElement(
   const englishInfo =
     infoElements.find(info => {
       const language =
-        getFirstText(info, "language")
-          .toLowerCase();
+        getFirstText(
+          info,
+          "language"
+        ).toLowerCase();
 
       return (
         !language ||
@@ -164,50 +198,80 @@ function parseAlertElement(
   }
 
   const event =
-    getFirstText(englishInfo, "event");
+    getFirstText(
+      englishInfo,
+      "event"
+    );
 
   const headline =
-    getFirstText(englishInfo, "headline");
+    getFirstText(
+      englishInfo,
+      "headline"
+    );
 
   const description =
-    getFirstText(englishInfo, "description");
+    getFirstText(
+      englishInfo,
+      "description"
+    );
 
   const instruction =
-    getFirstText(englishInfo, "instruction");
+    getFirstText(
+      englishInfo,
+      "instruction"
+    );
 
   const issuedAt =
     parseDate(
-      getFirstText(alertElement, "sent") ||
-      getFirstText(englishInfo, "effective") ||
-      getFirstText(englishInfo, "onset")
+      getFirstText(
+        alertElement,
+        "sent"
+      ) ||
+      getFirstText(
+        englishInfo,
+        "effective"
+      ) ||
+      getFirstText(
+        englishInfo,
+        "onset"
+      )
     );
 
   const expiresAt =
     parseDate(
-      getFirstText(englishInfo, "expires")
+      getFirstText(
+        englishInfo,
+        "expires"
+      )
     );
 
   if (isExpired(expiresAt)) {
     return null;
   }
 
-  const areas = getAllText(
-    englishInfo,
-    "areaDesc"
-  );
+  const areas =
+    getAllText(
+      englishInfo,
+      "areaDesc"
+    );
 
-  const type = determineAlertType({
-    event,
-    headline,
-    description
-  });
+  const type =
+    determineAlertType({
+      event,
+      headline,
+      description
+    });
 
   return {
     id:
-      getFirstText(alertElement, "identifier") ||
+      getFirstText(
+        alertElement,
+        "identifier"
+      ) ||
       `${provider}-${issuedAt?.getTime() || Date.now()}`,
 
     type,
+
     priority:
       ALERT_PRIORITY[type] ??
       ALERT_PRIORITY.information,
@@ -231,19 +295,26 @@ function parseAlertElement(
     areas,
 
     issuedAt:
-      issuedAt?.toISOString() || null,
+      issuedAt?.toISOString() ||
+      null,
 
     expiresAt:
-      expiresAt?.toISOString() || null,
+      expiresAt?.toISOString() ||
+      null,
 
     provider,
 
     source:
-      getFirstText(alertElement, "senderName") ||
-      provider,
+      getFirstText(
+        alertElement,
+        "senderName"
+      ) || provider,
 
     web:
-      getFirstText(englishInfo, "web") || "",
+      getFirstText(
+        englishInfo,
+        "web"
+      ) || "",
 
     severity:
       getFirstText(
@@ -275,7 +346,9 @@ function parseFeed(xmlText, provider) {
     );
 
   const parserError =
-    document.querySelector("parsererror");
+    document.querySelector(
+      "parsererror"
+    );
 
   if (parserError) {
     throw new Error(
@@ -302,10 +375,12 @@ function parseFeed(xmlText, provider) {
 async function fetchFeed(feed) {
   const response = await fetch(feed.url, {
     method: "GET",
+
     headers: {
       Accept:
         "application/xml, text/xml;q=0.9, */*;q=0.8"
     },
+
     cache: "no-store"
   });
 
@@ -315,7 +390,8 @@ async function fetchFeed(feed) {
     );
   }
 
-  const xmlText = await response.text();
+  const xmlText =
+    await response.text();
 
   return parseFeed(
     xmlText,
@@ -369,11 +445,14 @@ function getDisplayState(alerts) {
       ].includes(alert.type)
     );
 
-  if (actionableAlerts.length === 0) {
+  if (
+    actionableAlerts.length === 0
+  ) {
     return {
       level: "green",
       type: "clear",
-      title: "No active tsunami alerts",
+      title:
+        "No active tsunami alerts",
       message:
         "No tsunami warning, advisory, watch, or threat appears in the available official feeds.",
       alert: null
@@ -381,7 +460,9 @@ function getDisplayState(alerts) {
   }
 
   const highestPriorityAlert =
-    sortAlerts(actionableAlerts)[0];
+    sortAlerts(
+      actionableAlerts
+    )[0];
 
   const displayByType = {
     warning: {
@@ -401,7 +482,8 @@ function getDisplayState(alerts) {
 
     threat: {
       level: "blue",
-      title: "Potential Tsunami Threat"
+      title:
+        "Potential Tsunami Threat"
     }
   };
 
@@ -428,24 +510,32 @@ export async function fetchTsunamiStatus() {
 
   const results =
     await Promise.allSettled(
-      TSUNAMI_FEEDS.map(fetchFeed)
+      TSUNAMI_FEEDS.map(
+        fetchFeed
+      )
     );
 
   const successfulResults =
     results.filter(
       result =>
-        result.status === "fulfilled"
+        result.status ===
+        "fulfilled"
     );
 
-  if (successfulResults.length === 0) {
+  if (
+    successfulResults.length === 0
+  ) {
     return {
       available: false,
       level: "neutral",
       type: "unavailable",
+
       title:
         "Official alert status unavailable",
+
       message:
-        "Project Seismic could not reach the official tsunami feeds. Check your local emergency management authority for current information.",
+        "Project Seismic could not reach the available official tsunami feeds. Check your local emergency management authority for current information.",
+
       checkedAt,
       providers: [],
       alerts: [],
@@ -463,11 +553,14 @@ export async function fetchTsunamiStatus() {
 
   const providers =
     TSUNAMI_FEEDS
-      .filter((feed, index) =>
-        results[index].status ===
-        "fulfilled"
+      .filter(
+        (feed, index) =>
+          results[index].status ===
+          "fulfilled"
       )
-      .map(feed => feed.provider);
+      .map(
+        feed => feed.provider
+      );
 
   return {
     available: true,
