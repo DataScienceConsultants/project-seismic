@@ -1,4 +1,5 @@
 import { fetchEarthquakes } from "./api/usgs.js";
+import { fetchTsunamiStatus } from "./api/tsunami.js";
 import { createMap } from "./map/map.js";
 
 import {
@@ -6,10 +7,10 @@ import {
   renderUserLocation
 } from "./map/markers.js";
 
-import { renderEarthquakeCards } from "./ui/cards.js";
 import { getCurrentPosition } from "./services/geolocation.js";
-import { fetchTsunamiStatus } from "./api/tsunami.js";
+import { getRecommendation } from "./status/interpreter.js";
 import { getStatus } from "./status/statusEngine.js";
+import { renderEarthquakeCards } from "./ui/cards.js";
 import { formatTime } from "./utils/helpers.js";
 
 /* =====================================================
@@ -79,12 +80,46 @@ const safetyAlertLink =
   document.getElementById("safetyAlertLink");
 
 /* =====================================================
+   Recommended Action Card
+===================================================== */
+
+const recommendationCard =
+  document.getElementById("recommendationCard");
+
+const recommendationBadge =
+  document.getElementById("recommendationBadge");
+
+const recommendationHeadline =
+  document.getElementById("recommendationHeadline");
+
+const recommendationSummary =
+  document.getElementById("recommendationSummary");
+
+const recommendationExplanation =
+  document.getElementById("recommendationExplanation");
+
+const recommendationReminder =
+  document.getElementById("recommendationReminder");
+
+/* =====================================================
    Application State
 ===================================================== */
 
 let map;
 let currentEarthquakes = [];
 let userCoordinates = null;
+let currentTsunamiStatus = {
+  available: false,
+  level: "neutral",
+  type: "unavailable",
+  title: "Official alert status unavailable",
+  message:
+    "Project Seismic has not yet confirmed the current tsunami alert status.",
+  checkedAt: null,
+  providers: [],
+  alerts: [],
+  alert: null
+};
 
 const TSUNAMI_REFRESH_INTERVAL_MS =
   5 * 60 * 1000;
@@ -302,13 +337,6 @@ function getValidAlertUrl(value) {
 }
 
 function renderTsunamiStatus(status) {
-  /*
-   * The alert card is added in the next
-   * index.html update. These checks prevent
-   * app failure while files are updated
-   * one at a time.
-   */
-
   if (
     !safetyAlertCard ||
     !safetyAlertBadge ||
@@ -410,6 +438,75 @@ function renderTsunamiLoadingState() {
 }
 
 /* =====================================================
+   Recommended Action Rendering
+===================================================== */
+
+function getRecommendationBadge(level) {
+  const badges = {
+    green: "🟢",
+    blue: "🌊",
+    yellow: "🟡",
+    orange: "🟠",
+    red: "🔴",
+    neutral: "○"
+  };
+
+  return badges[level] || "○";
+}
+
+function renderRecommendation(
+  closestResult
+) {
+  /*
+   * The card will be added during the
+   * next complete index.html replacement.
+   * These checks keep the app working
+   * while files are updated in sequence.
+   */
+
+  if (
+    !recommendationCard ||
+    !recommendationBadge ||
+    !recommendationHeadline ||
+    !recommendationSummary ||
+    !recommendationExplanation ||
+    !recommendationReminder
+  ) {
+    return;
+  }
+
+  const recommendation =
+    getRecommendation({
+      closestResult,
+      tsunamiStatus:
+        currentTsunamiStatus,
+      hasUserLocation:
+        Boolean(userCoordinates)
+    });
+
+  recommendationCard.dataset.status =
+    recommendation.level ||
+    "neutral";
+
+  recommendationBadge.textContent =
+    getRecommendationBadge(
+      recommendation.level
+    );
+
+  recommendationHeadline.textContent =
+    recommendation.headline;
+
+  recommendationSummary.textContent =
+    recommendation.summary;
+
+  recommendationExplanation.textContent =
+    recommendation.explanation;
+
+  recommendationReminder.textContent =
+    recommendation.officialReminder;
+}
+
+/* =====================================================
    Main Earthquake Rendering
 ===================================================== */
 
@@ -429,6 +526,10 @@ function render() {
   updateStatusCard(
     closestResult,
     filteredEarthquakes.length
+  );
+
+  renderRecommendation(
+    closestResult
   );
 
   renderEarthquakeMarkers(
@@ -456,7 +557,10 @@ function render() {
       closestResult?.distance ??
       null,
 
-    closestEarthquakeId
+    closestEarthquakeId,
+
+    tsunamiStatus:
+      currentTsunamiStatus.type
   });
 }
 
@@ -540,6 +644,8 @@ async function loadEarthquakes() {
 
     lastUpdated.textContent =
       "Update failed";
+
+    renderRecommendation(null);
   }
 }
 
@@ -551,19 +657,21 @@ async function loadTsunamiStatus() {
   renderTsunamiLoadingState();
 
   try {
-    const tsunamiStatus =
+    currentTsunamiStatus =
       await fetchTsunamiStatus();
 
     renderTsunamiStatus(
-      tsunamiStatus
+      currentTsunamiStatus
     );
+
+    render();
   } catch (error) {
     console.error(
       "Tsunami alert error:",
       error
     );
 
-    renderTsunamiStatus({
+    currentTsunamiStatus = {
       available: false,
       level: "neutral",
       type: "unavailable",
@@ -576,7 +684,13 @@ async function loadTsunamiStatus() {
       providers: [],
       alerts: [],
       alert: null
-    });
+    };
+
+    renderTsunamiStatus(
+      currentTsunamiStatus
+    );
+
+    render();
   }
 }
 
@@ -602,11 +716,7 @@ async function loadUserLocation() {
       position
     );
 
-    if (
-      currentEarthquakes.length > 0
-    ) {
-      render();
-    }
+    render();
   } catch (error) {
     console.warn(
       "Location unavailable:",
@@ -615,11 +725,7 @@ async function loadUserLocation() {
 
     userCoordinates = null;
 
-    if (
-      currentEarthquakes.length > 0
-    ) {
-      render();
-    }
+    render();
   }
 }
 
