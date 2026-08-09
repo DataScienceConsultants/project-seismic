@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="src/css/typography.css" />
   <link rel="stylesheet" href="src/css/layout.css" />
   <link rel="stylesheet" href="src/css/components.css" />
+  <link rel="stylesheet" href="src/css/observatory.css" />
   <link rel="stylesheet" href="src/css/animations.css" />
   <link rel="stylesheet" href="src/css/map.css" />
 </head>
@@ -118,6 +119,61 @@
           </small>
         </div>
       </div>
+    </section>
+
+    <!-- =================================================
+         Athena Observatory
+    ================================================== -->
+
+    <section
+      class="observatory-card"
+      id="observatoryCard"
+      data-status="neutral"
+      aria-labelledby="observatoryStatus"
+      aria-live="polite"
+    >
+      <div class="observatory-header">
+        <p class="eyebrow">
+          <span id="observatoryBadge" aria-hidden="true">○</span>
+          Athena Observatory
+        </p>
+
+        <span class="observatory-region" id="observatoryRegion">
+          Puerto Rico and the Virgin Islands
+        </span>
+      </div>
+
+      <h2 id="observatoryStatus">Analyzing historical activity…</h2>
+
+      <p id="observatoryDescription">
+        Project Athena is comparing current seismic activity with historical observations.
+      </p>
+
+      <div class="observatory-metrics">
+        <div class="metric">
+          <span id="observatoryScore">--</span>
+          <small>Anomaly score</small>
+        </div>
+
+        <div class="metric">
+          <span id="observatoryTrend">--</span>
+          <small>Trend</small>
+        </div>
+
+        <div class="metric">
+          <span id="observatoryEventCount">--</span>
+          <small>Historical events</small>
+        </div>
+      </div>
+
+      <div class="observatory-detail-row">
+        <span id="observatoryTrendStrength">--</span>
+        <span id="observatoryUpdated">Analysis date unavailable</span>
+      </div>
+
+      <p class="observatory-disclaimer">
+        Athena describes historical seismic patterns. It does not predict earthquakes or determine imminent danger.
+      </p>
     </section>
 
     <!-- =================================================
