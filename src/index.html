@@ -171,6 +171,46 @@
         <span id="observatoryUpdated">Analysis date unavailable</span>
       </div>
 
+      <div class="observatory-history">
+        <div class="observatory-history-header">
+          <div>
+            <p class="eyebrow">Historical activity</p>
+            <h3>Observed seismic patterns</h3>
+          </div>
+
+          <div class="observatory-range-control" role="group" aria-label="Historical range">
+            <button type="button" data-athena-days="30" data-range-label="Last 30 days" aria-pressed="true">30D</button>
+            <button type="button" data-athena-days="90" data-range-label="Last 90 days" aria-pressed="false">90D</button>
+            <button type="button" data-athena-days="365" data-range-label="Last year" aria-pressed="false">1Y</button>
+            <button type="button" data-athena-days="1825" data-range-label="Last 5 years" aria-pressed="false">5Y</button>
+            <button type="button" data-athena-days="3650" data-range-label="Last 10 years" aria-pressed="false">10Y</button>
+          </div>
+        </div>
+
+        <div class="observatory-chart-panel">
+          <div class="observatory-chart-heading">
+            <h4>Historical anomaly score</h4>
+            <span id="observatoryChartRangeLabel">Last 30 days</span>
+          </div>
+          <div class="observatory-chart-container">
+            <canvas id="observatoryAnomalyChart" aria-label="Historical anomaly score chart" role="img"></canvas>
+          </div>
+          <p class="observatory-chart-summary" id="observatoryAnomalySummary">Daily anomaly scores; gaps indicate unavailable values.</p>
+        </div>
+
+        <div class="observatory-chart-panel">
+          <div class="observatory-chart-heading">
+            <h4>Daily earthquake activity</h4>
+          </div>
+          <div class="observatory-chart-container">
+            <canvas id="observatoryEventChart" aria-label="Daily earthquake activity chart" role="img"></canvas>
+          </div>
+          <p class="observatory-chart-summary" id="observatoryEventSummary">Daily event counts; gaps indicate unavailable values.</p>
+        </div>
+
+        <p class="observatory-chart-status" id="observatoryChartStatus" aria-live="polite">Loading historical activity…</p>
+      </div>
+
       <p class="observatory-disclaimer">
         Athena describes historical seismic patterns. It does not predict earthquakes or determine imminent danger.
       </p>
@@ -403,6 +443,7 @@
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
 
   <script
     type="module"

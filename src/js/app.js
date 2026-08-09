@@ -1,6 +1,6 @@
 import { fetchEarthquakes } from "./api/usgs.js";
 import { fetchTsunamiStatus } from "./api/tsunami.js";
-import { fetchAthenaSummary } from "./api/athena.js";
+import { fetchAthenaChart, fetchAthenaSummary } from "./api/athena.js";
 import { createMap } from "./map/map.js";
 
 import {
@@ -17,6 +17,11 @@ import {
   renderObservatoryError,
   renderObservatoryLoading
 } from "./ui/observatory.js";
+import {
+  renderObservatoryCharts,
+  renderObservatoryChartsError,
+  renderObservatoryChartsLoading
+} from "./ui/observatoryChart.js";
 import { formatTime } from "./utils/helpers.js";
 
 /* =====================================================
@@ -114,6 +119,8 @@ const recommendationReminder =
 let map;
 let currentEarthquakes = [];
 let userCoordinates = null;
+let athenaChartDays = 30;
+let athenaChartRequestId = 0;
 let currentTsunamiStatus = {
   available: false,
   level: "neutral",
@@ -716,6 +723,31 @@ async function loadAthenaSummary() {
   }
 }
 
+async function loadAthenaChart(days = 30) {
+  const requestId = ++athenaChartRequestId;
+  athenaChartDays = days;
+  const activeButton = document.querySelector(`[data-athena-days="${days}"]`);
+  const rangeLabel = activeButton?.dataset.rangeLabel || `Last ${days} days`;
+
+  document.querySelectorAll("[data-athena-days]").forEach(button => {
+    button.setAttribute(
+      "aria-pressed",
+      String(Number(button.dataset.athenaDays) === days)
+    );
+  });
+  renderObservatoryChartsLoading();
+
+  try {
+    const chart = await fetchAthenaChart(days);
+    if (requestId !== athenaChartRequestId) return;
+    renderObservatoryCharts(chart, days, rangeLabel);
+  } catch (error) {
+    if (requestId !== athenaChartRequestId) return;
+    console.error("Athena chart error:", error);
+    renderObservatoryChartsError();
+  }
+}
+
 /* =====================================================
    User Location Loading
 ===================================================== */
@@ -768,10 +800,18 @@ function initialize() {
     render
   );
 
+  document.querySelectorAll("[data-athena-days]").forEach(button => {
+    button.addEventListener("click", () => {
+      const days = Number(button.dataset.athenaDays);
+      if (days !== athenaChartDays) loadAthenaChart(days);
+    });
+  });
+
   loadEarthquakes();
   loadUserLocation();
   loadTsunamiStatus();
   loadAthenaSummary();
+  loadAthenaChart();
 
   window.setInterval(
     loadTsunamiStatus,

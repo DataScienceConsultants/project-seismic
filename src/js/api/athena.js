@@ -26,3 +26,32 @@ export async function fetchAthenaSummary() {
 
   return summary;
 }
+
+export async function fetchAthenaChart(days) {
+  if (!Number.isInteger(days) || days <= 0) {
+    throw new Error("Athena chart days must be a positive integer");
+  }
+
+  const response = await fetch(
+    `${ATHENA_API_BASE_URL}/timeseries/chart?days=${days}`,
+    { method: "GET" }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Athena chart request failed with status ${response.status}`
+    );
+  }
+
+  const chart = await response.json();
+
+  if (chart === null || typeof chart !== "object" || Array.isArray(chart)) {
+    throw new Error("Athena chart response must be a JSON object");
+  }
+
+  if (!Array.isArray(chart.points)) {
+    throw new Error("Athena chart response points must be an array");
+  }
+
+  return chart;
+}
