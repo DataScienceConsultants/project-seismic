@@ -1,5 +1,6 @@
 import { fetchEarthquakes } from "./api/usgs.js";
 import { fetchTsunamiStatus } from "./api/tsunami.js";
+import { fetchAthenaSummary } from "./api/athena.js";
 import { createMap } from "./map/map.js";
 
 import {
@@ -11,6 +12,11 @@ import { getCurrentPosition } from "./services/geolocation.js";
 import { getRecommendation } from "./status/interpreter.js";
 import { getStatus } from "./status/statusEngine.js";
 import { renderEarthquakeCards } from "./ui/cards.js";
+import {
+  renderObservatory,
+  renderObservatoryError,
+  renderObservatoryLoading
+} from "./ui/observatory.js";
 import { formatTime } from "./utils/helpers.js";
 
 /* =====================================================
@@ -695,6 +701,22 @@ async function loadTsunamiStatus() {
 }
 
 /* =====================================================
+   Athena Observatory Loading
+===================================================== */
+
+async function loadAthenaSummary() {
+  renderObservatoryLoading();
+
+  try {
+    const summary = await fetchAthenaSummary();
+    renderObservatory(summary);
+  } catch (error) {
+    console.error("Athena summary error:", error);
+    renderObservatoryError();
+  }
+}
+
+/* =====================================================
    User Location Loading
 ===================================================== */
 
@@ -749,6 +771,7 @@ function initialize() {
   loadEarthquakes();
   loadUserLocation();
   loadTsunamiStatus();
+  loadAthenaSummary();
 
   window.setInterval(
     loadTsunamiStatus,
