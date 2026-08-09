@@ -128,3 +128,107 @@
     grid-template-columns: 1fr;
   }
 }
+
+.observatory-history {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.observatory-history-header,
+.observatory-chart-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.observatory-history-header h3 {
+  margin: var(--space-2) 0 0;
+  font-size: 1.15rem;
+}
+
+.observatory-range-control {
+  display: flex;
+  max-width: 100%;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.observatory-range-control button {
+  min-width: 42px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.observatory-range-control button:hover {
+  color: var(--color-text-primary);
+}
+
+.observatory-range-control button:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+.observatory-range-control button[aria-pressed="true"] {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.11);
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.24);
+}
+
+.observatory-chart-panel {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  background: rgba(8, 8, 10, 0.28);
+}
+
+.observatory-chart-heading h4 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.observatory-chart-heading span,
+.observatory-chart-summary,
+.observatory-chart-status {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.observatory-chart-container {
+  position: relative;
+  height: 220px;
+  margin-top: var(--space-3);
+}
+
+.observatory-chart-summary {
+  margin: var(--space-2) 0 0;
+  line-height: 1.45;
+}
+
+.observatory-chart-status {
+  min-height: 1.2em;
+  margin: var(--space-3) 0 0;
+}
+
+@media (min-width: 700px) {
+  .observatory-chart-container { height: 280px; }
+}
+
+@media (max-width: 560px) {
+  .observatory-history-header { align-items: flex-start; flex-direction: column; }
+  .observatory-range-control { width: 100%; }
+}
