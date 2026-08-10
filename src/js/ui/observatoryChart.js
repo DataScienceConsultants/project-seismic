@@ -151,7 +151,7 @@ function levelKey(value) {
     : "unavailable";
 }
 
-function renderLevelLegend(element, levels, visible) {
+function renderLevelLegend(element, levels, visible, hasSignificantEvents = false) {
   if (!element) return;
   element.replaceChildren();
   element.hidden = !visible;
@@ -164,6 +164,14 @@ function renderLevelLegend(element, levels, visible) {
     item.append(marker, humanizeLevel(level));
     element.append(item);
   });
+  if (hasSignificantEvents) {
+    const item = document.createElement("span");
+    const marker = document.createElement("b");
+    marker.textContent = "×";
+    marker.setAttribute("aria-hidden", "true");
+    item.append(marker, "Significant earthquake day (M5.0+)");
+    element.append(item);
+  }
 }
 
 function chartOptions(days, tooltipLabel) {
@@ -193,6 +201,7 @@ function chartOptions(days, tooltipLabel) {
 
 function anomalyScatterConfiguration(data, days) {
   const groups = new Map();
+  const significantEvents = [];
   data.points.forEach(point => {
     const score = finiteValue(point.anomaly_score);
     const date = new Date(`${point.date}T00:00:00Z`).getTime();
@@ -205,6 +214,9 @@ function anomalyScatterConfiguration(data, days) {
       r: scatterPointRadius(point.event_count),
       source: point
     });
+    if (finiteValue(point.maximum_magnitude) >= 5) {
+      significantEvents.push({ x: date, y: score, source: point });
+    }
   });
 
   const options = chartOptions(days, context => {
@@ -213,6 +225,16 @@ function anomalyScatterConfiguration(data, days) {
     const eventCount = finiteValue(point.event_count);
     const magnitude = finiteValue(point.maximum_magnitude);
     const depth = finiteValue(point.mean_depth_km);
+    if (context.dataset.significantEvent) {
+      return [
+        "SIGNIFICANT EARTHQUAKE",
+        `Largest magnitude: ${magnitude === null ? "--" : `M ${magnitude.toFixed(1)}`}`,
+        `Athena anomaly score: ${score === null ? "--" : `${score.toFixed(1)} / 100`}`,
+        `Anomaly level: ${humanizeLevel(point.anomaly_level)}`,
+        `Earthquakes that day: ${eventCount === null ? "--" : eventCount.toLocaleString()}`,
+        `Mean depth: ${depth === null ? "--" : `${depth.toFixed(1)} km`}`
+      ];
+    }
     return [
       `Anomaly score: ${score === null ? "--" : `${score.toFixed(1)} / 100`}`,
       `Anomaly level: ${humanizeLevel(point.anomaly_level)}`,
@@ -242,22 +264,42 @@ function anomalyScatterConfiguration(data, days) {
   };
   options.scales.y.max = 100;
 
+  const levelDatasets = [...groups.entries()].map(([level, points]) => ({
+    label: humanizeLevel(level),
+    data: points,
+    backgroundColor: LEVEL_COLORS[level] || FALLBACK_LEVEL_COLOR,
+    hoverBackgroundColor: LEVEL_HOVER_COLORS[level] || FALLBACK_LEVEL_HOVER_COLOR,
+    borderWidth: 0,
+    hitRadius: SCATTER_HIT_RADIUS,
+    hoverRadius: context =>
+      (context.raw?.r || SCATTER_MIN_RADIUS) + SCATTER_HOVER_GROWTH,
+    hoverBorderWidth: 1.25,
+    hoverBorderColor: "rgba(255, 255, 255, 0.82)"
+  }));
+  const significantDataset = {
+    type: "scatter",
+    label: "Significant earthquake day (M5.0+)",
+    significantEvent: true,
+    data: significantEvents,
+    showLine: false,
+    pointStyle: "crossRot",
+    pointRadius: 7,
+    pointHoverRadius: 10,
+    pointHitRadius: SCATTER_HIT_RADIUS,
+    pointBackgroundColor: "rgba(0, 0, 0, 0)",
+    pointBorderColor: "rgba(245, 220, 164, 0.9)",
+    pointHoverBorderColor: "rgba(255, 239, 202, 1)",
+    pointBorderWidth: 2
+  };
+
   return {
     type: "bubble",
-    data: { datasets: [...groups.entries()].map(([level, points]) => ({
-      label: humanizeLevel(level),
-      data: points,
-      backgroundColor: LEVEL_COLORS[level] || FALLBACK_LEVEL_COLOR,
-      hoverBackgroundColor: LEVEL_HOVER_COLORS[level] || FALLBACK_LEVEL_HOVER_COLOR,
-      borderWidth: 0,
-      hitRadius: SCATTER_HIT_RADIUS,
-      hoverRadius: context =>
-        (context.raw?.r || SCATTER_MIN_RADIUS) + SCATTER_HOVER_GROWTH,
-      hoverBorderWidth: 1.25,
-      hoverBorderColor: "rgba(255, 255, 255, 0.82)"
-    })) },
+    data: { datasets: significantEvents.length
+      ? [...levelDatasets, significantDataset]
+      : levelDatasets },
     options,
-    levels: [...groups.keys()]
+    levels: [...groups.keys()],
+    hasSignificantEvents: significantEvents.length > 0
   };
 }
 
@@ -315,10 +357,15 @@ function chartConfiguration(data, days, type, visualization = "adaptive") {
 }
 
 function createChart(canvas, configuration) {
-  const { levels = [], ...chartConfigurationOptions } = configuration;
+  const {
+    levels = [],
+    hasSignificantEvents = false,
+    ...chartConfigurationOptions
+  } = configuration;
   return {
     chart: new window.Chart(canvas, chartConfigurationOptions),
-    levels
+    levels,
+    hasSignificantEvents
   };
 }
 
@@ -371,7 +418,12 @@ function renderExpanded(data = latestChartData, days = latestChartDays) {
   expandedChart = result.chart;
   const scatter = expandedChartType === "anomaly" &&
     resolvedAnomalyMode(days, visualization) === "scatter";
-  renderLevelLegend(elements.modalLegend, result.levels, scatter);
+  renderLevelLegend(
+    elements.modalLegend,
+    result.levels,
+    scatter,
+    result.hasSignificantEvents
+  );
   elements.modalSummary.textContent = scatter
     ? `${SCATTER_EXPLANATION} ${CHART_COPY.anomaly.summary}`
     : CHART_COPY[expandedChartType].summary;
@@ -509,7 +561,12 @@ export function renderObservatoryCharts(data, days = 30, rangeLabel = "Last 30 d
     chartConfiguration(data, days, "events", "line")
   ).chart;
   const inlineScatter = resolvedAnomalyMode(days) === "scatter";
-  renderLevelLegend(elements.anomalyLegend, anomalyResult.levels, inlineScatter);
+  renderLevelLegend(
+    elements.anomalyLegend,
+    anomalyResult.levels,
+    inlineScatter,
+    anomalyResult.hasSignificantEvents
+  );
   latestChartData = data;
   latestChartDays = days;
   latestRangeLabel = rangeLabel;

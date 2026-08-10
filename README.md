@@ -61,6 +61,10 @@ reported daily event count, and the text legend identifies anomaly levels
 present in the response. Every valid
 daily anomaly observation remains in Chart.js; no aggregation, smoothing,
 resampling, or downsampling is performed.
+Scatter views also overlay an X marker for each day whose reported largest
+earthquake is M5.0 or greater. These annotations come directly from the loaded
+daily Athena payload and do not trigger another request or replace the underlying
+daily point.
 
 ### Manual verification
 

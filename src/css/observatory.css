@@ -519,6 +519,11 @@
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 50%;
 }
+.observatory-anomaly-legend b {
+  color: rgba(245, 220, 164, 0.95);
+  font-size: 1rem;
+  line-height: 0.7;
+}
 
 @media (max-width: 560px) {
   .observatory-visualization-control {
