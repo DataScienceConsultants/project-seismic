@@ -232,3 +232,88 @@
   .observatory-history-header { align-items: flex-start; flex-direction: column; }
   .observatory-range-control { width: 100%; }
 }
+
+/* Athena loading and refresh feedback */
+.observatory-card.is-loading #observatoryStatus,
+.observatory-card.is-loading #observatoryDescription,
+.observatory-card.is-loading .observatory-metric-value,
+.observatory-card.is-loading .metric > span,
+.observatory-card.is-loading .observatory-detail-row > span {
+  color: transparent;
+  border-radius: 6px;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0.06) 30%, rgba(255, 255, 255, 0.13) 48%, rgba(255, 255, 255, 0.06) 66%);
+  background-size: 220% 100%;
+  animation: observatory-shimmer 1.8s ease-in-out infinite;
+}
+
+.observatory-card.is-loading #observatoryStatus { max-width: 18ch; }
+.observatory-card.is-loading #observatoryStatus::after {
+  color: var(--color-text-secondary);
+  content: "Loading Athena analysis…";
+  font-size: 0.72rem;
+  letter-spacing: 0;
+}
+.observatory-card.is-loading #observatoryDescription { max-width: 58ch; }
+.observatory-card.is-loading .metric > span { width: min(100%, 7ch); }
+
+@keyframes observatory-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+.observatory-chart-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: rgba(8, 8, 10, 0.58);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.observatory-history.is-updating .observatory-chart-overlay { opacity: 1; }
+.observatory-history.is-updating canvas { opacity: 0.42; }
+.observatory-history.is-initial-loading .observatory-chart-container {
+  border-radius: 8px;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0.04) 30%, rgba(255, 255, 255, 0.1) 48%, rgba(255, 255, 255, 0.04) 66%);
+  background-size: 220% 100%;
+  animation: observatory-shimmer 1.8s ease-in-out infinite;
+}
+.observatory-history.is-initial-loading canvas,
+.observatory-history.is-empty canvas { visibility: hidden; }
+
+.observatory-range-control button:disabled {
+  cursor: wait;
+  opacity: 0.78;
+}
+
+@media (max-width: 560px) {
+  .observatory-card { padding: 18px 14px; }
+  .observatory-region { max-width: 100%; overflow-wrap: anywhere; }
+  .observatory-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .observatory-metrics .metric { min-width: 0; padding: 12px 8px; }
+  .observatory-metrics .metric > span { font-size: clamp(1.1rem, 6vw, 1.5rem); overflow-wrap: anywhere; }
+  .observatory-metrics small { line-height: 1.25; }
+  .observatory-range-control { scrollbar-width: thin; }
+  .observatory-range-control button { flex: 1 0 42px; }
+  .observatory-chart-panel { padding: 12px 10px; }
+  .observatory-chart-container { height: clamp(180px, 58vw, 220px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .observatory-card,
+  .observatory-chart-overlay { transition: none; }
+  .observatory-card.is-loading #observatoryStatus,
+  .observatory-card.is-loading #observatoryDescription,
+  .observatory-card.is-loading .metric > span,
+  .observatory-card.is-loading .observatory-detail-row > span,
+  .observatory-history.is-initial-loading .observatory-chart-container {
+    animation: none;
+    background-position: 0 0;
+  }
+}

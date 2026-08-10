@@ -1,10 +1,32 @@
 import { ATHENA_API_BASE_URL } from "../config.js";
 
+const ATHENA_TIMEOUT_MS = 10_000;
+
+export class AthenaTimeoutError extends Error {
+  constructor(resource) {
+    super(`Athena ${resource} request timed out`);
+    this.name = "AthenaTimeoutError";
+  }
+}
+
+async function fetchWithTimeout(url, resource) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), ATHENA_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, { method: "GET", signal: controller.signal });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new AthenaTimeoutError(resource);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
 export async function fetchAthenaSummary() {
-  const response = await fetch(
-    `${ATHENA_API_BASE_URL}/summary`,
-    { method: "GET" }
-  );
+  const response = await fetchWithTimeout(`${ATHENA_API_BASE_URL}/summary`, "summary");
 
   if (!response.ok) {
     throw new Error(
@@ -32,9 +54,9 @@ export async function fetchAthenaChart(days) {
     throw new Error("Athena chart days must be a positive integer");
   }
 
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${ATHENA_API_BASE_URL}/timeseries/chart?days=${days}`,
-    { method: "GET" }
+    "chart"
   );
 
   if (!response.ok) {

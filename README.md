@@ -36,6 +36,15 @@ anomaly score and event count charts are descriptive and nonpredictive. A chart
 failure affects only the historical chart area and does not disable the Athena
 summary or any other application feature.
 
+Athena requests use a 10-second timeout and fail with calm, nontechnical UI
+messages. Lightweight loading skeletons keep the Observatory structure visible
+on its first load. When a different range is selected, the last successful
+charts remain faintly visible under an updating overlay until the new data is
+ready. If that refresh fails, the last successful historical view remains in
+place; an empty range is identified without inventing zero values. The anomaly
+score describes how unusual observed activity is relative to Athena's historical
+baseline—it is not an earthquake probability or prediction.
+
 ### Manual verification
 
 - Confirm the Observatory first displays its loading state, then renders the
@@ -48,6 +57,12 @@ summary or any other application feature.
 - Check that the Observatory layout remains readable at mobile viewport sizes.
 - Switch among every historical range and confirm the active control and both
   charts update without reloading or stacking chart instances.
+- Switch ranges rapidly and confirm stale responses never replace the newest
+  selection, duplicate requests are avoided, and the updating text is announced.
 - Confirm null anomaly scores and event counts appear as gaps rather than zero.
 - Simulate summary and chart failures independently and confirm either area can
   remain available when the other fails.
+- Simulate empty chart points and request timeouts; confirm the empty message is
+  shown and a failed refresh retains the last successful charts.
+- Check 320px, 375px, 430px, tablet, and desktop widths, including a long region
+  name and reduced-motion preference.

@@ -194,8 +194,11 @@
           </div>
           <div class="observatory-chart-container">
             <canvas id="observatoryAnomalyChart" aria-label="Historical anomaly score chart" role="img"></canvas>
+            <div class="observatory-chart-overlay" aria-hidden="true">
+              <span>Updating historical activity…</span>
+            </div>
           </div>
-          <p class="observatory-chart-summary" id="observatoryAnomalySummary">Daily anomaly scores; gaps indicate unavailable values.</p>
+          <p class="observatory-chart-summary" id="observatoryAnomalySummary">Daily anomaly scores compare observed activity with Athena’s historical baseline. Higher values indicate greater historical unusualness, not earthquake probability.</p>
         </div>
 
         <div class="observatory-chart-panel">
@@ -204,8 +207,11 @@
           </div>
           <div class="observatory-chart-container">
             <canvas id="observatoryEventChart" aria-label="Daily earthquake activity chart" role="img"></canvas>
+            <div class="observatory-chart-overlay" aria-hidden="true">
+              <span>Updating historical activity…</span>
+            </div>
           </div>
-          <p class="observatory-chart-summary" id="observatoryEventSummary">Daily event counts; gaps indicate unavailable values.</p>
+          <p class="observatory-chart-summary" id="observatoryEventSummary">Daily earthquake counts show observed event frequency for the selected period.</p>
         </div>
 
         <p class="observatory-chart-status" id="observatoryChartStatus" aria-live="polite">Loading historical activity…</p>
