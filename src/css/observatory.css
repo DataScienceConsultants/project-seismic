@@ -454,3 +454,81 @@
 @media (prefers-reduced-motion: reduce) {
   .observatory-chart-modal * { transition: none; }
 }
+
+.observatory-visualization-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.observatory-visualization-control[hidden] { display: none; }
+.observatory-visualization-control > div {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.observatory-visualization-control button {
+  padding: 6px 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.observatory-visualization-control button[aria-pressed="true"] {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+}
+
+.observatory-visualization-control button:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+.observatory-anomaly-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px var(--space-3);
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.observatory-anomaly-legend[hidden] { display: none; }
+.observatory-anomaly-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.observatory-anomaly-legend i {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+}
+
+@media (max-width: 560px) {
+  .observatory-visualization-control {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .observatory-visualization-control > div {
+    width: 100%;
+    overflow-x: auto;
+  }
+  .observatory-visualization-control button { flex: 1 0 auto; }
+}

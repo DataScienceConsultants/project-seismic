@@ -201,6 +201,7 @@
               <span>Updating historical activity…</span>
             </div>
           </div>
+          <div class="observatory-anomaly-legend" id="observatoryAnomalyLegend" aria-label="Anomaly levels shown" hidden></div>
           <p class="observatory-chart-summary" id="observatoryAnomalySummary">Daily anomaly scores compare observed activity with Athena’s historical baseline. Higher values indicate greater historical unusualness, not earthquake probability.</p>
         </div>
 
@@ -243,10 +244,19 @@
           <button type="button" data-athena-modal-days="1825" aria-pressed="false">5Y</button>
           <button type="button" data-athena-modal-days="3650" aria-pressed="false">10Y</button>
         </div>
+        <div class="observatory-visualization-control" id="observatoryVisualizationControl" hidden>
+          <span>Visualization</span>
+          <div role="group" aria-label="Anomaly chart visualization">
+            <button type="button" data-athena-visualization="adaptive" aria-pressed="true">Adaptive</button>
+            <button type="button" data-athena-visualization="line" aria-pressed="false">Line</button>
+            <button type="button" data-athena-visualization="scatter" aria-pressed="false">Scatter</button>
+          </div>
+        </div>
         <div class="observatory-chart-modal-canvas-wrap">
           <canvas id="observatoryExpandedChart" role="img" aria-label="Expanded Athena historical chart"></canvas>
           <div class="observatory-chart-overlay" aria-hidden="true"><span>Updating historical activity…</span></div>
         </div>
+        <div class="observatory-anomaly-legend" id="observatoryChartModalLegend" aria-label="Anomaly levels shown" hidden></div>
         <p class="observatory-chart-modal-summary" id="observatoryChartModalSummary"></p>
         <p class="observatory-chart-modal-status" id="observatoryChartModalStatus" aria-live="polite"></p>
       </section>

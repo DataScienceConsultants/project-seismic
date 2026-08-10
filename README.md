@@ -52,6 +52,15 @@ smooth, or resample long-range data. It supports keyboard focus containment,
 Escape/backdrop/close-button dismissal, and restores page focus and scrolling
 when closed.
 
+Anomaly visualization is adaptive without changing the source observations:
+30D, 90D, and 1Y use the daily line view, while 5Y and 10Y use a daily bubble
+scatter view for readability. The expanded anomaly chart also offers temporary
+Adaptive, Line, and Scatter controls. Scatter point position is the original
+anomaly score, bounded point size reflects the reported daily event count, and
+the text legend identifies anomaly levels present in the response. Every valid
+daily anomaly observation remains in Chart.js; no aggregation, smoothing,
+resampling, or downsampling is performed.
+
 ### Manual verification
 
 - Confirm the Observatory first displays its loading state, then renders the
@@ -81,3 +90,10 @@ when closed.
   stay synchronized without duplicate requests or stale response overwrites.
 - Confirm failed and empty expanded ranges retain or clear chart data as
   appropriate, and repeated opening never stacks Chart.js instances.
+- Confirm inline 30D/90D/1Y anomaly views are lines and 5Y/10Y are scatter
+  views, with one bubble for every daily point that has an anomaly score.
+- In the expanded anomaly view, switch among Adaptive, Line, and Scatter and
+  confirm the chart rerenders from memory without an Athena API request.
+- Verify scatter radii stay bounded, actual anomaly levels appear in the text
+  legend, and tooltips include date, score, level, event count, largest
+  magnitude, and mean depth while null values remain unavailable.

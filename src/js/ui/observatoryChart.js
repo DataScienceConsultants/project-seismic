@@ -9,6 +9,17 @@ let expandedChartType = null;
 let modalTrigger = null;
 let previousBodyOverflow = "";
 let requestRange = null;
+let expandedVisualization = "adaptive";
+
+const SCATTER_MIN_DAYS = 1825;
+const SCATTER_EXPLANATION = "Each point represents one day. Vertical position shows Athena anomaly score, point size reflects observed earthquake count, and category indicates Athena anomaly level.";
+const LEVEL_COLORS = {
+  typical: "rgba(104, 164, 137, 0.62)",
+  noteworthy: "rgba(215, 181, 109, 0.66)",
+  high: "rgba(207, 137, 91, 0.68)",
+  extreme: "rgba(190, 91, 91, 0.7)"
+};
+const FALLBACK_LEVEL_COLOR = "rgba(166, 166, 173, 0.58)";
 
 const CHART_COPY = {
   anomaly: {
@@ -39,7 +50,10 @@ function getElements() {
     modalCanvasWrap: document.querySelector(".observatory-chart-modal-canvas-wrap"),
     modalSummary: document.getElementById("observatoryChartModalSummary"),
     modalStatus: document.getElementById("observatoryChartModalStatus"),
-    modalClose: document.querySelector(".observatory-chart-modal-close")
+    modalClose: document.querySelector(".observatory-chart-modal-close"),
+    anomalyLegend: document.getElementById("observatoryAnomalyLegend"),
+    modalLegend: document.getElementById("observatoryChartModalLegend"),
+    visualizationControl: document.getElementById("observatoryVisualizationControl")
   };
 }
 
@@ -88,6 +102,48 @@ function addTooltipDates(options, points) {
   return options;
 }
 
+function humanizeLevel(value) {
+  if (typeof value !== "string" || !value.trim()) return "Unavailable";
+  const normalized = value.trim().replace(/[_-]+/g, " ").toLowerCase();
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function finiteValue(value) {
+  if (typeof value === "boolean") return null;
+  const number = Number(value);
+  return value !== null && value !== "" && Number.isFinite(number) ? number : null;
+}
+
+function bubbleRadius(eventCount) {
+  const count = finiteValue(eventCount);
+  return count === null ? 3 : Math.min(14, 3 + Math.sqrt(Math.max(0, count)) * 0.8);
+}
+
+function resolvedAnomalyMode(days, mode = "adaptive") {
+  return mode === "adaptive" ? (days >= SCATTER_MIN_DAYS ? "scatter" : "line") : mode;
+}
+
+function levelKey(value) {
+  return typeof value === "string" && value.trim()
+    ? value.trim().toLowerCase()
+    : "unavailable";
+}
+
+function renderLevelLegend(element, levels, visible) {
+  if (!element) return;
+  element.replaceChildren();
+  element.hidden = !visible;
+  if (!visible) return;
+  levels.forEach(level => {
+    const item = document.createElement("span");
+    const marker = document.createElement("i");
+    marker.style.backgroundColor = LEVEL_COLORS[level] || FALLBACK_LEVEL_COLOR;
+    marker.setAttribute("aria-hidden", "true");
+    item.append(marker, humanizeLevel(level));
+    element.append(item);
+  });
+}
+
 function chartOptions(days, tooltipLabel) {
   const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   return {
@@ -113,10 +169,75 @@ function chartOptions(days, tooltipLabel) {
   };
 }
 
-function chartConfiguration(data, days, type) {
+function anomalyScatterConfiguration(data, days) {
+  const groups = new Map();
+  data.points.forEach(point => {
+    const score = finiteValue(point.anomaly_score);
+    const date = new Date(`${point.date}T00:00:00Z`).getTime();
+    if (score === null || !Number.isFinite(date)) return;
+    const level = levelKey(point.anomaly_level);
+    if (!groups.has(level)) groups.set(level, []);
+    groups.get(level).push({
+      x: date,
+      y: score,
+      r: bubbleRadius(point.event_count),
+      source: point
+    });
+  });
+
+  const options = chartOptions(days, context => {
+    const point = context.raw.source;
+    const score = finiteValue(point.anomaly_score);
+    const eventCount = finiteValue(point.event_count);
+    const magnitude = finiteValue(point.maximum_magnitude);
+    const depth = finiteValue(point.mean_depth_km);
+    return [
+      `Anomaly score: ${score === null ? "--" : `${score.toFixed(1)} / 100`}`,
+      `Level: ${humanizeLevel(point.anomaly_level)}`,
+      `Earthquakes: ${eventCount === null ? "--" : eventCount.toLocaleString()}`,
+      `Largest magnitude: ${magnitude === null ? "--" : magnitude.toFixed(1)}`,
+      `Mean depth: ${depth === null ? "--" : `${depth.toFixed(1)} km`}`
+    ];
+  });
+  options.animation.duration = 0;
+  options.plugins.tooltip.callbacks.title = items => {
+    const point = items[0]?.raw?.source;
+    return point ? tooltipDate(point.date) : "";
+  };
+  options.scales.x = {
+    type: "linear",
+    grid: { display: false },
+    ticks: {
+      color: "#a6a6ad",
+      autoSkip: true,
+      maxTicksLimit: days >= 3650 ? 10 : 12,
+      callback: value => readableDate(new Date(value).toISOString().slice(0, 10), days)
+    }
+  };
+  options.scales.y.max = 100;
+
+  return {
+    type: "bubble",
+    data: { datasets: [...groups.entries()].map(([level, points]) => ({
+      label: humanizeLevel(level),
+      data: points,
+      backgroundColor: LEVEL_COLORS[level] || FALLBACK_LEVEL_COLOR,
+      borderWidth: 0,
+      hoverBorderWidth: 1,
+      hoverBorderColor: "rgba(255, 255, 255, 0.7)"
+    })) },
+    options,
+    levels: [...groups.keys()]
+  };
+}
+
+function chartConfiguration(data, days, type, visualization = "adaptive") {
   const labels = data.points.map(point => readableDate(point.date, days));
 
   if (type === "anomaly") {
+    if (resolvedAnomalyMode(days, visualization) === "scatter") {
+      return anomalyScatterConfiguration(data, days);
+    }
     const levels = data.points.map(point =>
       typeof point.anomaly_level === "string" ? point.anomaly_level : "Unavailable"
     );
@@ -125,7 +246,7 @@ function chartConfiguration(data, days, type) {
       `Anomaly level: ${levels[context.dataIndex]}`
     ]), data.points);
     options.scales.y.max = 100;
-    return {
+    const configuration = {
       type: "line",
       data: { labels, datasets: [{
         label: "Anomaly score",
@@ -137,8 +258,11 @@ function chartConfiguration(data, days, type) {
         pointHitRadius: 8,
         spanGaps: false
       }] },
-      options
+      options,
+      levels: []
     };
+    if (days >= SCATTER_MIN_DAYS) configuration.options.animation.duration = 0;
+    return configuration;
   }
 
   return {
@@ -157,6 +281,14 @@ function chartConfiguration(data, days, type) {
       chartOptions(days, context => `Events per day: ${context.formattedValue}`),
       data.points
     )
+  };
+}
+
+function createChart(canvas, configuration) {
+  const { levels = [], ...chartConfigurationOptions } = configuration;
+  return {
+    chart: new window.Chart(canvas, chartConfigurationOptions),
+    levels
   };
 }
 
@@ -181,7 +313,9 @@ function renderExpanded(data = latestChartData, days = latestChartDays) {
   elements.modal.classList.remove("is-updating", "is-empty");
   elements.modalCanvasWrap.hidden = false;
   elements.modalTitle.textContent = CHART_COPY[expandedChartType].title;
+  elements.visualizationControl.hidden = expandedChartType !== "anomaly";
   elements.modalSummary.textContent = CHART_COPY[expandedChartType].summary;
+  renderLevelLegend(elements.modalLegend, [], false);
   elements.modalCanvas.setAttribute("aria-label", CHART_COPY[expandedChartType].canvasLabel);
   syncModalRanges(selectedChartDays);
 
@@ -199,10 +333,18 @@ function renderExpanded(data = latestChartData, days = latestChartDays) {
     return;
   }
 
-  expandedChart = new window.Chart(
+  const visualization = expandedChartType === "anomaly" ? expandedVisualization : "line";
+  const result = createChart(
     elements.modalCanvas,
-    chartConfiguration(data, days, expandedChartType)
+    chartConfiguration(data, days, expandedChartType, visualization)
   );
+  expandedChart = result.chart;
+  const scatter = expandedChartType === "anomaly" &&
+    resolvedAnomalyMode(days, visualization) === "scatter";
+  renderLevelLegend(elements.modalLegend, result.levels, scatter);
+  elements.modalSummary.textContent = scatter
+    ? `${SCATTER_EXPLANATION} ${CHART_COPY.anomaly.summary}`
+    : CHART_COPY[expandedChartType].summary;
   elements.modalStatus.textContent = `${latestRangeLabel} historical activity loaded.`;
   window.requestAnimationFrame(() => expandedChart?.resize());
 }
@@ -223,10 +365,14 @@ function openExpandedChart(type, trigger) {
   const elements = getElements();
   if (!elements.modal || !CHART_COPY[type]) return;
   expandedChartType = type;
+  expandedVisualization = "adaptive";
   modalTrigger = trigger;
   previousBodyOverflow = document.body.style.overflow;
   document.body.style.overflow = "hidden";
   elements.modal.hidden = false;
+  document.querySelectorAll("[data-athena-visualization]").forEach(button => {
+    button.setAttribute("aria-pressed", String(button.dataset.athenaVisualization === "adaptive"));
+  });
   renderExpanded();
   elements.modalClose?.focus();
 }
@@ -262,6 +408,15 @@ export function initializeObservatoryChartModal(loadRange) {
   });
   document.querySelectorAll("[data-athena-modal-days]").forEach(button => {
     button.addEventListener("click", () => loadRange(Number(button.dataset.athenaModalDays)));
+  });
+  document.querySelectorAll("[data-athena-visualization]").forEach(button => {
+    button.addEventListener("click", () => {
+      expandedVisualization = button.dataset.athenaVisualization;
+      document.querySelectorAll("[data-athena-visualization]").forEach(control => {
+        control.setAttribute("aria-pressed", String(control === button));
+      });
+      renderExpanded();
+    });
   });
   modal.querySelectorAll("[data-chart-modal-close]").forEach(element => {
     element.addEventListener("click", closeExpandedChart);
@@ -303,6 +458,7 @@ export function renderObservatoryCharts(data, days = 30, rangeLabel = "Last 30 d
     latestChartData = data;
     latestChartDays = days;
     latestRangeLabel = rangeLabel;
+    renderLevelLegend(elements.anomalyLegend, [], false);
     elements.history?.classList.add("is-empty");
     elements.status.textContent = "No historical observations are available for this range.";
     elements.anomalySummary.textContent = "No anomaly score observations are available.";
@@ -313,12 +469,23 @@ export function renderObservatoryCharts(data, days = 30, rangeLabel = "Last 30 d
 
   if (typeof window.Chart !== "function") throw new Error("Chart.js is unavailable");
 
-  anomalyChart = new window.Chart(elements.anomalyCanvas, chartConfiguration(data, days, "anomaly"));
-  eventChart = new window.Chart(elements.eventCanvas, chartConfiguration(data, days, "events"));
+  const anomalyResult = createChart(
+    elements.anomalyCanvas,
+    chartConfiguration(data, days, "anomaly", "adaptive")
+  );
+  anomalyChart = anomalyResult.chart;
+  eventChart = createChart(
+    elements.eventCanvas,
+    chartConfiguration(data, days, "events", "line")
+  ).chart;
+  const inlineScatter = resolvedAnomalyMode(days) === "scatter";
+  renderLevelLegend(elements.anomalyLegend, anomalyResult.levels, inlineScatter);
   latestChartData = data;
   latestChartDays = days;
   latestRangeLabel = rangeLabel;
-  elements.anomalySummary.textContent = CHART_COPY.anomaly.summary;
+  elements.anomalySummary.textContent = inlineScatter
+    ? `${SCATTER_EXPLANATION} ${CHART_COPY.anomaly.summary}`
+    : CHART_COPY.anomaly.summary;
   elements.eventSummary.textContent = CHART_COPY.events.summary;
   elements.status.textContent = "Historical activity loaded.";
   if (modalIsOpen()) renderExpanded();
@@ -339,6 +506,8 @@ export function renderObservatoryChartsError(hasPreviousData = false) {
   }
   destroyInlineCharts();
   destroyExpandedChart();
+  renderLevelLegend(elements.anomalyLegend, [], false);
+  renderLevelLegend(elements.modalLegend, [], false);
   elements.history?.classList.add("is-empty");
   if (elements.status) elements.status.textContent = "Historical chart data is temporarily unavailable.";
   if (elements.modalStatus) elements.modalStatus.textContent = "Historical chart data is temporarily unavailable.";
