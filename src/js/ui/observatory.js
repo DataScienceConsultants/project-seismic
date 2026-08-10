@@ -12,12 +12,12 @@ const STATUS_DETAILS = {
   high: {
     badge: "🟠",
     description:
-      "Historical seismic activity is high relative to the baseline for this region."
+      "Historical activity is substantially above the typical range for this region."
   },
   critical: {
     badge: "🔴",
     description:
-      "Historical seismic activity is substantially above the baseline for this region."
+      "Historical activity is at an unusually high level relative to the observed baseline."
   }
 };
 
@@ -56,7 +56,7 @@ function formatDate(value) {
     return "Analysis date unavailable";
   }
 
-  return `Analysis through ${new Intl.DateTimeFormat(undefined, {
+  return `Analyzed through ${new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeZone: "UTC"
   }).format(date)}`;
@@ -86,6 +86,7 @@ export function renderObservatoryLoading() {
   }
 
   elements.card.dataset.status = "neutral";
+  elements.card.classList.add("is-loading");
   elements.badge.textContent = "○";
   elements.status.textContent = "Analyzing historical activity…";
   elements.description.textContent =
@@ -102,6 +103,7 @@ export function renderObservatory(summary) {
   if (!hasAllElements(elements)) {
     return;
   }
+  elements.card.classList.remove("is-loading");
 
   const rawStatus =
     typeof summary.overall_status === "string"
@@ -144,6 +146,7 @@ export function renderObservatoryError() {
   }
 
   elements.card.dataset.status = "neutral";
+  elements.card.classList.remove("is-loading");
   elements.badge.textContent = "○";
   elements.status.textContent = "Athena analysis unavailable";
   elements.description.textContent =

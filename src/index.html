@@ -190,22 +190,33 @@
         <div class="observatory-chart-panel">
           <div class="observatory-chart-heading">
             <h4>Historical anomaly score</h4>
-            <span id="observatoryChartRangeLabel">Last 30 days</span>
+            <div class="observatory-chart-heading-actions">
+              <span id="observatoryChartRangeLabel">Last 30 days</span>
+              <button type="button" class="observatory-chart-expand" data-expand-athena-chart="anomaly" aria-label="Expand historical anomaly score chart">Expand</button>
+            </div>
           </div>
           <div class="observatory-chart-container">
             <canvas id="observatoryAnomalyChart" aria-label="Historical anomaly score chart" role="img"></canvas>
+            <div class="observatory-chart-overlay" aria-hidden="true">
+              <span>Updating historical activity…</span>
+            </div>
           </div>
-          <p class="observatory-chart-summary" id="observatoryAnomalySummary">Daily anomaly scores; gaps indicate unavailable values.</p>
+          <div class="observatory-anomaly-legend" id="observatoryAnomalyLegend" aria-label="Anomaly levels shown" hidden></div>
+          <p class="observatory-chart-summary" id="observatoryAnomalySummary">Daily anomaly scores compare observed activity with Athena’s historical baseline. Higher values indicate greater historical unusualness, not earthquake probability.</p>
         </div>
 
         <div class="observatory-chart-panel">
           <div class="observatory-chart-heading">
             <h4>Daily earthquake activity</h4>
+            <button type="button" class="observatory-chart-expand" data-expand-athena-chart="events" aria-label="Expand daily earthquake activity chart">Expand</button>
           </div>
           <div class="observatory-chart-container">
             <canvas id="observatoryEventChart" aria-label="Daily earthquake activity chart" role="img"></canvas>
+            <div class="observatory-chart-overlay" aria-hidden="true">
+              <span>Updating historical activity…</span>
+            </div>
           </div>
-          <p class="observatory-chart-summary" id="observatoryEventSummary">Daily event counts; gaps indicate unavailable values.</p>
+          <p class="observatory-chart-summary" id="observatoryEventSummary">Daily earthquake counts show observed event frequency for the selected period.</p>
         </div>
 
         <p class="observatory-chart-status" id="observatoryChartStatus" aria-live="polite">Loading historical activity…</p>
@@ -215,6 +226,41 @@
         Athena describes historical seismic patterns. It does not predict earthquakes or determine imminent danger.
       </p>
     </section>
+
+    <div class="observatory-chart-modal" id="observatoryChartModal" hidden>
+      <div class="observatory-chart-modal-backdrop" data-chart-modal-close></div>
+      <section class="observatory-chart-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="observatoryChartModalTitle" aria-describedby="observatoryChartModalSummary">
+        <div class="observatory-chart-modal-header">
+          <div>
+            <p class="eyebrow">Athena Observatory</p>
+            <h2 id="observatoryChartModalTitle">Expanded historical chart</h2>
+          </div>
+          <button type="button" class="observatory-chart-modal-close" aria-label="Close expanded chart" data-chart-modal-close>×</button>
+        </div>
+        <div class="observatory-chart-modal-range observatory-range-control" role="group" aria-label="Expanded historical range">
+          <button type="button" data-athena-modal-days="30" aria-pressed="true">30D</button>
+          <button type="button" data-athena-modal-days="90" aria-pressed="false">90D</button>
+          <button type="button" data-athena-modal-days="365" aria-pressed="false">1Y</button>
+          <button type="button" data-athena-modal-days="1825" aria-pressed="false">5Y</button>
+          <button type="button" data-athena-modal-days="3650" aria-pressed="false">10Y</button>
+        </div>
+        <div class="observatory-visualization-control" id="observatoryVisualizationControl" hidden>
+          <span>Visualization</span>
+          <div role="group" aria-label="Anomaly chart visualization">
+            <button type="button" data-athena-visualization="adaptive" aria-pressed="true">Adaptive</button>
+            <button type="button" data-athena-visualization="line" aria-pressed="false">Line</button>
+            <button type="button" data-athena-visualization="scatter" aria-pressed="false">Scatter</button>
+          </div>
+        </div>
+        <div class="observatory-chart-modal-canvas-wrap">
+          <canvas id="observatoryExpandedChart" role="img" aria-label="Expanded Athena historical chart"></canvas>
+          <div class="observatory-chart-overlay" aria-hidden="true"><span>Updating historical activity…</span></div>
+        </div>
+        <div class="observatory-anomaly-legend" id="observatoryChartModalLegend" aria-label="Anomaly levels shown" hidden></div>
+        <p class="observatory-chart-modal-summary" id="observatoryChartModalSummary"></p>
+        <p class="observatory-chart-modal-status" id="observatoryChartModalStatus" aria-live="polite"></p>
+      </section>
+    </div>
 
     <!-- =================================================
          Safety Alerts

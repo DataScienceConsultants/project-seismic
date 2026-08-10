@@ -18,6 +18,7 @@ import {
   renderObservatoryLoading
 } from "./ui/observatory.js";
 import {
+  initializeObservatoryChartModal,
   renderObservatoryCharts,
   renderObservatoryChartsError,
   renderObservatoryChartsLoading
@@ -121,6 +122,8 @@ let currentEarthquakes = [];
 let userCoordinates = null;
 let athenaChartDays = 30;
 let athenaChartRequestId = 0;
+let athenaChartHasData = false;
+let athenaChartRequestDays = null;
 let currentTsunamiStatus = {
   available: false,
   level: "neutral",
@@ -718,33 +721,47 @@ async function loadAthenaSummary() {
     const summary = await fetchAthenaSummary();
     renderObservatory(summary);
   } catch (error) {
-    console.error("Athena summary error:", error);
+    console.error(`Athena summary unavailable (${error.name || "request error"}).`);
     renderObservatoryError();
   }
 }
 
 async function loadAthenaChart(days = 30) {
+  if (athenaChartRequestDays === days) return;
   const requestId = ++athenaChartRequestId;
   athenaChartDays = days;
+  athenaChartRequestDays = days;
   const activeButton = document.querySelector(`[data-athena-days="${days}"]`);
   const rangeLabel = activeButton?.dataset.rangeLabel || `Last ${days} days`;
 
   document.querySelectorAll("[data-athena-days]").forEach(button => {
+    const isSelected = Number(button.dataset.athenaDays) === days;
     button.setAttribute(
       "aria-pressed",
-      String(Number(button.dataset.athenaDays) === days)
+      String(isSelected)
     );
+    button.disabled = isSelected;
+    button.setAttribute("aria-busy", String(isSelected));
   });
-  renderObservatoryChartsLoading();
+  renderObservatoryChartsLoading(athenaChartHasData, days);
 
   try {
     const chart = await fetchAthenaChart(days);
     if (requestId !== athenaChartRequestId) return;
     renderObservatoryCharts(chart, days, rangeLabel);
+    athenaChartHasData = chart.points.length > 0;
   } catch (error) {
     if (requestId !== athenaChartRequestId) return;
-    console.error("Athena chart error:", error);
-    renderObservatoryChartsError();
+    console.error(`Athena chart unavailable (${error.name || "request error"}).`);
+    renderObservatoryChartsError(athenaChartHasData);
+  } finally {
+    if (requestId === athenaChartRequestId) {
+      athenaChartRequestDays = null;
+      document.querySelectorAll("[data-athena-days]").forEach(button => {
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+      });
+    }
   }
 }
 
@@ -789,6 +806,8 @@ async function loadUserLocation() {
 
 function initialize() {
   map = createMap();
+
+  initializeObservatoryChartModal(loadAthenaChart);
 
   timeRange.addEventListener(
     "change",
