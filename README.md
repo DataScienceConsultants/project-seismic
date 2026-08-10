@@ -45,6 +45,13 @@ place; an empty range is identified without inventing zero values. The anomaly
 score describes how unusual observed activity is relative to Athena's historical
 baseline—it is not an earthquake probability or prediction.
 
+Each historical chart can also be expanded into a reusable, accessible dialog.
+The expanded view uses the already-loaded daily observations, keeps its range
+controls synchronized with the inline Observatory, and does not aggregate,
+smooth, or resample long-range data. It supports keyboard focus containment,
+Escape/backdrop/close-button dismissal, and restores page focus and scrolling
+when closed.
+
 ### Manual verification
 
 - Confirm the Observatory first displays its loading state, then renders the
@@ -66,3 +73,11 @@ baseline—it is not an earthquake probability or prediction.
   shown and a failed refresh retains the last successful charts.
 - Check 320px, 375px, 430px, tablet, and desktop widths, including a long region
   name and reduced-motion preference.
+- Expand both chart types and verify their titles, descriptions, daily tooltips,
+  and large desktop and full-screen mobile layouts.
+- Close the expanded chart with its close button, Escape, and the backdrop;
+  confirm focus returns to the triggering button and body scrolling is restored.
+- Switch all five ranges from both inline and expanded controls and confirm they
+  stay synchronized without duplicate requests or stale response overwrites.
+- Confirm failed and empty expanded ranges retain or clear chart data as
+  appropriate, and repeated opening never stacks Chart.js instances.

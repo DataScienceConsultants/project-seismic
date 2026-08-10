@@ -18,6 +18,7 @@ import {
   renderObservatoryLoading
 } from "./ui/observatory.js";
 import {
+  initializeObservatoryChartModal,
   renderObservatoryCharts,
   renderObservatoryChartsError,
   renderObservatoryChartsLoading
@@ -742,7 +743,7 @@ async function loadAthenaChart(days = 30) {
     button.disabled = isSelected;
     button.setAttribute("aria-busy", String(isSelected));
   });
-  renderObservatoryChartsLoading(athenaChartHasData);
+  renderObservatoryChartsLoading(athenaChartHasData, days);
 
   try {
     const chart = await fetchAthenaChart(days);
@@ -805,6 +806,8 @@ async function loadUserLocation() {
 
 function initialize() {
   map = createMap();
+
+  initializeObservatoryChartModal(loadAthenaChart);
 
   timeRange.addEventListener(
     "change",
