@@ -12,6 +12,11 @@ let requestRange = null;
 let expandedVisualization = "adaptive";
 
 const SCATTER_MIN_DAYS = 1825;
+const SCATTER_MIN_RADIUS = 1;
+const SCATTER_MAX_RADIUS = 5;
+const SCATTER_HIT_RADIUS = 10;
+const SCATTER_HOVER_GROWTH = 2.5;
+const EVENT_COUNT_RADIUS_COMPRESSION = 100;
 const SCATTER_EXPLANATION = "Each point represents one day. Vertical position shows Athena anomaly score, point size reflects observed earthquake count, and category indicates Athena anomaly level.";
 const LEVEL_COLORS = {
   typical: "rgba(104, 164, 137, 0.42)",
@@ -121,10 +126,19 @@ function finiteValue(value) {
   return value !== null && value !== "" && Number.isFinite(number) ? number : null;
 }
 
-function bubbleRadius(eventCount) {
+function scatterPointRadius(eventCount) {
   const count = finiteValue(eventCount);
-  if (count === null) return 1;
-  return Math.min(5, 1 + Math.log1p(Math.max(0, count)) / Math.log(10) * 0.7);
+  if (count === null) return SCATTER_MIN_RADIUS;
+
+  const squareRootCount = Math.sqrt(Math.max(0, count));
+  const normalizedCount = squareRootCount /
+    (squareRootCount + EVENT_COUNT_RADIUS_COMPRESSION);
+
+  return Math.min(
+    SCATTER_MAX_RADIUS,
+    SCATTER_MIN_RADIUS +
+      (SCATTER_MAX_RADIUS - SCATTER_MIN_RADIUS) * normalizedCount
+  );
 }
 
 function resolvedAnomalyMode(days, mode = "adaptive") {
@@ -188,7 +202,7 @@ function anomalyScatterConfiguration(data, days) {
     groups.get(level).push({
       x: date,
       y: score,
-      r: bubbleRadius(point.event_count),
+      r: scatterPointRadius(point.event_count),
       source: point
     });
   });
@@ -210,6 +224,8 @@ function anomalyScatterConfiguration(data, days) {
   options.animation.duration = 0;
   options.interaction = { mode: "nearest", intersect: false, axis: "xy" };
   options.plugins.tooltip.position = "nearest";
+  options.plugins.tooltip.caretPadding = 8;
+  options.plugins.tooltip.padding = 10;
   options.plugins.tooltip.callbacks.title = items => {
     const point = items[0]?.raw?.source;
     return point ? tooltipDate(point.date) : "";
@@ -234,8 +250,9 @@ function anomalyScatterConfiguration(data, days) {
       backgroundColor: LEVEL_COLORS[level] || FALLBACK_LEVEL_COLOR,
       hoverBackgroundColor: LEVEL_HOVER_COLORS[level] || FALLBACK_LEVEL_HOVER_COLOR,
       borderWidth: 0,
-      hitRadius: 10,
-      hoverRadius: context => (context.raw?.r || 1) + 2.5,
+      hitRadius: SCATTER_HIT_RADIUS,
+      hoverRadius: context =>
+        (context.raw?.r || SCATTER_MIN_RADIUS) + SCATTER_HOVER_GROWTH,
       hoverBorderWidth: 1.25,
       hoverBorderColor: "rgba(255, 255, 255, 0.82)"
     })) },
