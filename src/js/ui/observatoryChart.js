@@ -199,6 +199,17 @@ function chartOptions(days, tooltipLabel) {
   };
 }
 
+function configureAnomalyScale(options) {
+  options.scales.y.min = 0;
+  options.scales.y.max = 105;
+  options.scales.y.grid.color = context =>
+    context.tick.value === 100
+      ? "rgba(255, 255, 255, 0.18)"
+      : "rgba(255, 255, 255, 0.07)";
+  options.scales.y.ticks.callback = value => value === 105 ? "" : value;
+  return options;
+}
+
 function anomalyScatterConfiguration(data, days) {
   const groups = new Map();
   const significantEvents = [];
@@ -262,7 +273,7 @@ function anomalyScatterConfiguration(data, days) {
       callback: value => readableDate(new Date(value).toISOString().slice(0, 10), days)
     }
   };
-  options.scales.y.max = 100;
+  configureAnomalyScale(options);
 
   const levelDatasets = [...groups.entries()].map(([level, points]) => ({
     label: humanizeLevel(level),
@@ -317,7 +328,7 @@ function chartConfiguration(data, days, type, visualization = "adaptive") {
       `Anomaly score: ${context.formattedValue}`,
       `Anomaly level: ${levels[context.dataIndex]}`
     ]), data.points);
-    options.scales.y.max = 100;
+    configureAnomalyScale(options);
     const configuration = {
       type: "line",
       data: { labels, datasets: [{
