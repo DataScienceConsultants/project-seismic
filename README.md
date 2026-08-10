@@ -56,8 +56,8 @@ Anomaly visualization is adaptive without changing the source observations:
 30D, 90D, and 1Y use the daily line view, while 5Y and 10Y use a daily bubble
 scatter view for readability. The expanded anomaly chart also offers temporary
 Adaptive, Line, and Scatter controls. Scatter point position is the original
-anomaly score, bounded point size reflects the reported daily event count, and
-the text legend identifies anomaly levels present in the response. Every valid
+anomaly score, a compressed 1–5px point size reflects the reported daily event
+count, and the text legend identifies anomaly levels present in the response. Every valid
 daily anomaly observation remains in Chart.js; no aggregation, smoothing,
 resampling, or downsampling is performed.
 

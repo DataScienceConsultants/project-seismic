@@ -14,12 +14,19 @@ let expandedVisualization = "adaptive";
 const SCATTER_MIN_DAYS = 1825;
 const SCATTER_EXPLANATION = "Each point represents one day. Vertical position shows Athena anomaly score, point size reflects observed earthquake count, and category indicates Athena anomaly level.";
 const LEVEL_COLORS = {
-  typical: "rgba(104, 164, 137, 0.62)",
-  noteworthy: "rgba(215, 181, 109, 0.66)",
-  high: "rgba(207, 137, 91, 0.68)",
-  extreme: "rgba(190, 91, 91, 0.7)"
+  typical: "rgba(104, 164, 137, 0.42)",
+  noteworthy: "rgba(215, 181, 109, 0.46)",
+  high: "rgba(207, 137, 91, 0.48)",
+  extreme: "rgba(190, 91, 91, 0.5)"
 };
-const FALLBACK_LEVEL_COLOR = "rgba(166, 166, 173, 0.58)";
+const LEVEL_HOVER_COLORS = {
+  typical: "rgba(104, 164, 137, 0.9)",
+  noteworthy: "rgba(215, 181, 109, 0.92)",
+  high: "rgba(207, 137, 91, 0.92)",
+  extreme: "rgba(190, 91, 91, 0.94)"
+};
+const FALLBACK_LEVEL_COLOR = "rgba(166, 166, 173, 0.4)";
+const FALLBACK_LEVEL_HOVER_COLOR = "rgba(166, 166, 173, 0.9)";
 
 const CHART_COPY = {
   anomaly: {
@@ -89,7 +96,7 @@ function tooltipDate(value) {
   const date = new Date(`${value}T00:00:00Z`);
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
+    dateStyle: "long",
     timeZone: "UTC"
   }).format(date);
 }
@@ -116,7 +123,8 @@ function finiteValue(value) {
 
 function bubbleRadius(eventCount) {
   const count = finiteValue(eventCount);
-  return count === null ? 3 : Math.min(14, 3 + Math.sqrt(Math.max(0, count)) * 0.8);
+  if (count === null) return 1;
+  return Math.min(5, 1 + Math.log1p(Math.max(0, count)) / Math.log(10) * 0.7);
 }
 
 function resolvedAnomalyMode(days, mode = "adaptive") {
@@ -193,13 +201,15 @@ function anomalyScatterConfiguration(data, days) {
     const depth = finiteValue(point.mean_depth_km);
     return [
       `Anomaly score: ${score === null ? "--" : `${score.toFixed(1)} / 100`}`,
-      `Level: ${humanizeLevel(point.anomaly_level)}`,
+      `Anomaly level: ${humanizeLevel(point.anomaly_level)}`,
       `Earthquakes: ${eventCount === null ? "--" : eventCount.toLocaleString()}`,
-      `Largest magnitude: ${magnitude === null ? "--" : magnitude.toFixed(1)}`,
+      `Largest magnitude: ${magnitude === null ? "--" : `M ${magnitude.toFixed(1)}`}`,
       `Mean depth: ${depth === null ? "--" : `${depth.toFixed(1)} km`}`
     ];
   });
   options.animation.duration = 0;
+  options.interaction = { mode: "nearest", intersect: false, axis: "xy" };
+  options.plugins.tooltip.position = "nearest";
   options.plugins.tooltip.callbacks.title = items => {
     const point = items[0]?.raw?.source;
     return point ? tooltipDate(point.date) : "";
@@ -222,9 +232,12 @@ function anomalyScatterConfiguration(data, days) {
       label: humanizeLevel(level),
       data: points,
       backgroundColor: LEVEL_COLORS[level] || FALLBACK_LEVEL_COLOR,
+      hoverBackgroundColor: LEVEL_HOVER_COLORS[level] || FALLBACK_LEVEL_HOVER_COLOR,
       borderWidth: 0,
-      hoverBorderWidth: 1,
-      hoverBorderColor: "rgba(255, 255, 255, 0.7)"
+      hitRadius: 10,
+      hoverRadius: context => (context.raw?.r || 1) + 2.5,
+      hoverBorderWidth: 1.25,
+      hoverBorderColor: "rgba(255, 255, 255, 0.82)"
     })) },
     options,
     levels: [...groups.keys()]
