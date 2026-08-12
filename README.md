@@ -66,6 +66,21 @@ earthquake is M5.0 or greater. These annotations come directly from the loaded
 daily Athena payload and do not trigger another request or replace the underlying
 daily point.
 
+## Athena Research console
+
+`research.html` is a separate, desktop-first research interface; it does not
+replace the public Project Seismic entry point. Its Leaflet map uses canvas-backed
+earthquake points and GeoJSON fault and boundary layers, with independent layer,
+magnitude, time-window, and timeline controls. The intelligence panel, chart,
+connections mode, and local watchlist establish front-end contracts for later
+viewport-filtered and warehouse-backed data.
+
+The initial catalog in `fixtures/research/catalog.js` is deliberately small and
+is labeled demonstration data. In particular, its fault and plate-boundary lines
+are illustrative fixture geometry, not authoritative scientific mapping. The
+adapter in `src/js/research/research-data.js` names the intended research routes
+without issuing requests to nonexistent production endpoints.
+
 ### Manual verification
 
 - Confirm the Observatory first displays its loading state, then renders the
