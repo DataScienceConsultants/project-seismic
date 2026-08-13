@@ -11,12 +11,18 @@ const display = value => escapeHtml(unavailable(value));
 const metric = (label, value) => `<div class="metric"><span>${escapeHtml(label)}</span><b>${display(value)}</b></div>`;
 const metrics = pairs => `<div class="metric-grid">${pairs.map(pair => metric(...pair)).join("")}</div>`;
 
+function hasValue(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
 function formatNumber(value, digits = 0) {
+  if (!hasValue(value)) return null;
   const number = Number(value);
   return Number.isFinite(number) ? number.toLocaleString(undefined, { maximumFractionDigits: digits }) : null;
 }
 
 function formatDistance(value) {
+  if (!hasValue(value)) return null;
   const number = Number(value);
   return Number.isFinite(number) ? `${number.toFixed(1)} km` : null;
 }
