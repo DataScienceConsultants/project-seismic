@@ -10,6 +10,7 @@ export const RESEARCH_ENDPOINTS = Object.freeze({
   earthquakes: endpoint("/research/earthquakes"),
   faults: endpoint("/research/faults"),
   boundaries: endpoint("/research/plate-boundaries"),
+  plateConnections: endpoint("/research/plate-connections"),
   region: region => endpoint(`/research/regions/${encodeURIComponent(region)}`),
   fault: id => endpoint(`/research/faults/${encodeURIComponent(id)}`),
   sequences: endpoint("/research/sequences"),
@@ -94,7 +95,8 @@ function normalizeEarthquake(event) {
     athenaScore: event.athena_score ?? null,
     sequenceId: event.sequence_id ?? null,
     sequencePosition: event.sequence_position ?? null,
-    nearestFault: null
+    nearestFault: null,
+    nearestBoundary: null
   };
 }
 
@@ -105,10 +107,19 @@ function normalizeSequence(sequence) {
   };
 }
 
+function findCitation(summary, sourceKey) {
+  const citations = Array.isArray(summary.source_citations) ? summary.source_citations : [];
+  return citations.find(item => item?.source_key === sourceKey) || null;
+}
+
 function buildMeta(summary) {
   const availability = summary.availability || {};
   const endDate = new Date(summary.end_utc);
   if (Number.isFinite(endDate.getTime())) endDate.setUTCMilliseconds(endDate.getUTCMilliseconds() - 1);
+
+  const bird = findCitation(summary, "bird_pb2002");
+  const birdCitation = bird?.citation?.formatted
+    || "Bird, P. (2003). An updated digital model of plate boundaries. Geochemistry, Geophysics, Geosystems, 4, 1027. DOI 10.1029/2001GC000252.";
 
   return {
     fixture: false,
@@ -122,8 +133,10 @@ function buildMeta(summary) {
       ? `${summary.fault_source || "GEM Global Active Faults Database"} · geographic context only`
       : "Unavailable — no prepared active-fault geometry",
     boundaries: availability.plate_boundaries
-      ? "Prepared plate-boundary artifact"
+      ? `${summary.plate_boundary_source || "Bird PB2002 plate boundary model"} · tectonic context only`
       : "Unavailable — no prepared plate-boundary artifact",
+    boundaryCitation: birdCitation,
+    boundaryLicense: bird?.distribution_license || null,
     reportIsNonpredictive: summary.report_is_nonpredictive === true,
     catalogEventCount: summary.catalog_event_count ?? null,
     minimumMagnitude: summary.minimum_magnitude ?? 6,
@@ -131,6 +144,10 @@ function buildMeta(summary) {
     faultGeometryFeatureCount: summary.fault_geojson_feature_count ?? null,
     faultAssociationSemantics: summary.fault_association_semantics
       || "Nearest mapped active-fault geographic context; not causal attribution.",
+    plateBoundaryFeatureCount: summary.plate_boundary_geojson_feature_count ?? null,
+    plateBoundaryAssociationCount: summary.event_plate_boundary_association_count ?? null,
+    plateBoundaryAssociationSemantics: summary.plate_boundary_association_semantics
+      || "Nearest mapped PB2002 plate-boundary context; not causal attribution or future-earthquake probability.",
     availability
   };
 }
@@ -138,13 +155,22 @@ function buildMeta(summary) {
 async function loadDataset() {
   if (!datasetPromise) {
     datasetPromise = (async () => {
-      const [summary, earthquakes, faultPayload, boundaryPayload, sequencePayload, connectionPayload] = await Promise.all([
+      const [
+        summary,
+        earthquakes,
+        faultPayload,
+        boundaryPayload,
+        sequencePayload,
+        connectionPayload,
+        plateConnectionPayload
+      ] = await Promise.all([
         fetchJson(RESEARCH_ENDPOINTS.summary),
         fetchAllEarthquakes(),
         fetchJson(RESEARCH_ENDPOINTS.faults),
         fetchJson(RESEARCH_ENDPOINTS.boundaries),
         fetchJson(RESEARCH_ENDPOINTS.sequences),
-        fetchJson(RESEARCH_ENDPOINTS.connections)
+        fetchJson(RESEARCH_ENDPOINTS.connections),
+        fetchJson(RESEARCH_ENDPOINTS.plateConnections)
       ]);
 
       if (summary.report_is_nonpredictive !== true) {
@@ -152,6 +178,7 @@ async function loadDataset() {
       }
 
       const faultSource = summary.fault_source || "GEM Global Active Faults Database";
+      const boundarySource = summary.plate_boundary_source || "Bird PB2002 plate boundary model";
       const faults = Array.isArray(faultPayload.features)
         ? faultPayload.features.map((feature, index) => normalizeFault(feature, index, faultSource))
         : [];
@@ -160,18 +187,40 @@ async function loadDataset() {
         ? sequencePayload.items.map(normalizeSequence)
         : [];
       const connections = Array.isArray(connectionPayload.items) ? connectionPayload.items : [];
+      const plateConnections = Array.isArray(plateConnectionPayload.items)
+        ? plateConnectionPayload.items
+        : [];
 
       const connectionByEvent = new Map(connections.map(item => [String(item.event_id), item]));
+      const plateConnectionByEvent = new Map(
+        plateConnections.map(item => [String(item.event_id), item])
+      );
       earthquakes.forEach(event => {
         const association = connectionByEvent.get(String(event.id));
-        if (!association) return;
-        event.nearestFault = {
-          faultId: association.fault_id,
-          faultName: association.fault_name || "Unnamed mapped active fault",
-          distanceKm: association.distance_km,
-          source: association.fault_source || faultSource,
-          relationship: association.relationship || "nearest_mapped_active_fault_context"
-        };
+        if (association) {
+          event.nearestFault = {
+            faultId: association.fault_id,
+            faultName: association.fault_name || "Unnamed mapped active fault",
+            distanceKm: association.distance_km,
+            source: association.fault_source || faultSource,
+            relationship: association.relationship || "nearest_mapped_active_fault_context"
+          };
+        }
+
+        const plateAssociation = plateConnectionByEvent.get(String(event.id));
+        if (plateAssociation) {
+          event.nearestBoundary = {
+            stepId: plateAssociation.step_id,
+            boundaryId: plateAssociation.boundary_id,
+            leftPlate: plateAssociation.left_plate,
+            rightPlate: plateAssociation.right_plate,
+            boundaryClass: plateAssociation.boundary_class,
+            polarity: plateAssociation.polarity,
+            distanceKm: plateAssociation.distance_km,
+            source: plateAssociation.source || boundarySource,
+            relationship: plateAssociation.relationship || "nearest_mapped_plate_boundary_context"
+          };
+        }
       });
 
       return {
@@ -181,7 +230,8 @@ async function loadDataset() {
         faults,
         boundaries,
         sequences,
-        connections
+        connections,
+        plateConnections
       };
     })().catch(error => {
       datasetPromise = null;
