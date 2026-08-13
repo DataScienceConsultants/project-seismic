@@ -6,6 +6,16 @@ function faultLabel(feature) {
   return feature?.properties?.fault_name || "Mapped active fault";
 }
 
+function boundaryLabel(feature) {
+  const properties = feature?.properties || {};
+  const boundaryId = properties.boundary_id || "PB2002 boundary";
+  const left = properties.left_plate;
+  const right = properties.right_plate;
+  const platePair = left && right ? `${left}–${right}` : left || right || null;
+  const boundaryClass = properties.boundary_class || null;
+  return [boundaryId, platePair, boundaryClass].filter(Boolean).join(" · ");
+}
+
 export function createResearchLayers(map, onSelect) {
   const groups = Object.fromEntries(
     ["earthquakes", "faults", "boundaries", "anomalies", "sequences", "connections"]
@@ -77,7 +87,7 @@ export function createResearchLayers(map, onSelect) {
         },
         onEachFeature: (feature, layer) => {
           layer
-            .bindTooltip("Prepared plate boundary", { className: "research-tooltip" })
+            .bindTooltip(boundaryLabel(feature), { className: "research-tooltip", sticky: true })
             .on("click", () => onSelect("boundary", feature.properties || {}));
         }
       }).addTo(groups.boundaries);
