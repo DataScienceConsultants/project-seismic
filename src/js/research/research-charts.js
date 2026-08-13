@@ -61,28 +61,24 @@ function drawSeries(context, width, height, values, metric) {
   context.fillStyle = "#55d6c8";
   context.lineWidth = 1.5;
   context.globalAlpha = 0.85;
-  context.beginPath();
-  let started = false;
 
-  values.forEach((value, index) => {
-    if (!Number.isFinite(value)) return;
-    const x = index * xStep;
-    const y = yFor(value);
-    if (!started) {
-      context.moveTo(x, y);
-      started = true;
-    } else {
-      context.lineTo(x, y);
-    }
-  });
-  context.stroke();
+  if (metric === "count") {
+    context.beginPath();
+    values.forEach((value, index) => {
+      const x = index * xStep;
+      const y = yFor(value);
+      if (index === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    });
+    context.stroke();
+  }
 
   values.forEach((value, index) => {
     if (!Number.isFinite(value)) return;
     const x = index * xStep;
     const y = yFor(value);
     context.beginPath();
-    context.arc(x, y, 2, 0, Math.PI * 2);
+    context.arc(x, y, metric === "count" ? 1.8 : 2.6, 0, Math.PI * 2);
     context.fill();
   });
   context.globalAlpha = 1;
@@ -133,7 +129,9 @@ export function createResearchChart() {
       return;
     }
 
-    const metricLabel = selectedMetric === "count" ? "observed event count" : "observed maximum magnitude";
+    const metricLabel = selectedMetric === "count"
+      ? "observed event count"
+      : "observed maximum magnitude (scatter; empty buckets omitted)";
     note.textContent = `${bucketCount} time buckets · ${metricLabel} · retrospective descriptive catalog data`;
   }
 
