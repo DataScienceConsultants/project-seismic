@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#071013">
   <title>Athena Research · Project Seismic</title>
-  <meta name="description" content="A private research console for retrospective global seismic exploration.">
+  <meta name="description" content="A research console for retrospective global seismic exploration.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
     <main class="research-workspace">
       <section class="map-stage" aria-label="Global research map">
         <div id="researchMap"></div>
-        <div class="map-status"><span class="live-dot"></span><b>GLOBAL VIEW</b><span id="mapStatus">Fixture catalog · filtered viewport</span></div>
+        <div class="map-status"><span class="live-dot"></span><b>GLOBAL VIEW</b><span id="mapStatus">Loading Athena research data…</span></div>
         <section class="layer-control" aria-labelledby="layerTitle">
           <div><span class="kicker">MAP DATA</span><h2 id="layerTitle">Layers</h2></div>
           <label><input type="checkbox" data-layer="earthquakes" checked><i class="swatch quake"></i> Earthquakes</label>
@@ -40,15 +40,15 @@
         <aside class="research-panel" id="researchPanel" aria-label="Research intelligence">
           <div class="panel-heading"><div><span class="kicker" id="panelType">REGION</span><h2 id="panelTitle">Global research view</h2></div><button id="panelClose" aria-label="Collapse research intelligence">×</button></div>
           <div id="panelContent"></div>
-          <details class="provenance" open><summary>Data status &amp; provenance</summary><dl id="provenanceContent"></dl><p>No mapped fault association available in the current dataset must not be interpreted as no fault existing.</p></details>
+          <details class="provenance" open><summary>Data status &amp; provenance</summary><dl id="provenanceContent"></dl><p>A missing mapped fault association must not be interpreted as no fault existing.</p></details>
         </aside>
       </section>
 
       <section class="analysis-dock">
-        <div class="range-row"><div><span class="kicker">RESEARCH WINDOW</span><strong id="rangeLabel">30 days ending present</strong></div><div class="presets" role="group" aria-label="Time range"><button data-range="30" class="active">30D</button><button data-range="365">1Y</button><button data-range="1825">5Y</button><button data-range="3650">10Y</button><button data-range="9125">25Y</button><button data-range="18250">50Y</button><button data-range="all">1976 → Present</button></div></div>
-        <div class="timeline"><span>1976</span><input id="timelineScrubber" type="range" min="0" max="100" value="100" aria-label="Historical timeline date"><span id="timelineDate">PRESENT</span></div>
+        <div class="range-row"><div><span class="kicker">RESEARCH WINDOW</span><strong id="rangeLabel">30 days ending cohort end</strong></div><div class="presets" role="group" aria-label="Time range"><button data-range="30" class="active">30D</button><button data-range="365">1Y</button><button data-range="1825">5Y</button><button data-range="3650">10Y</button><button data-range="9125">25Y</button><button data-range="18250">50Y</button><button data-range="all">1976 → 2025</button></div></div>
+        <div class="timeline"><span>1976</span><input id="timelineScrubber" type="range" min="0" max="100" value="100" aria-label="Historical timeline date"><span id="timelineDate">2025-12-31</span></div>
         <div class="dock-grid">
-          <section class="chart-card"><div class="card-title"><div><span class="kicker">OBSERVED ACTIVITY</span><h2>Research series</h2></div><select id="chartMetric" aria-label="Chart metric"><option value="anomaly">Athena anomaly score</option><option value="count">Event count</option><option value="magnitude">Maximum magnitude</option><option value="energy">Energy</option></select></div><canvas id="researchChart" width="900" height="180" aria-label="Research time series"></canvas><p id="chartNote">Short-window line view · descriptive observations</p></section>
+          <section class="chart-card"><div class="card-title"><div><span class="kicker">OBSERVED ACTIVITY</span><h2>Research series</h2></div><select id="chartMetric" aria-label="Chart metric"><option value="count" selected>Event count</option><option value="magnitude">Maximum magnitude</option><option value="anomaly">Athena anomaly score</option><option value="energy">Energy</option></select></div><canvas id="researchChart" width="900" height="180" aria-label="Research time series"></canvas><p id="chartNote">Observed catalog series · retrospective descriptive data</p></section>
           <section class="watchlist-card"><div class="card-title"><div><span class="kicker">PERSONAL</span><h2>Watchlist</h2></div><button id="pinSelection">+ Pin selection</button></div><ul id="watchlist"></ul></section>
         </div>
       </section>
