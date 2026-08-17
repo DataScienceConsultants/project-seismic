@@ -27,6 +27,14 @@ function formatDistance(value) {
   return Number.isFinite(number) ? `${number.toFixed(1)} km` : null;
 }
 
+function platePair(boundary) {
+  if (!boundary) return null;
+  const left = hasValue(boundary.leftPlate) ? String(boundary.leftPlate) : null;
+  const right = hasValue(boundary.rightPlate) ? String(boundary.rightPlate) : null;
+  if (left && right) return `${left}–${right}`;
+  return left || right;
+}
+
 export function createPanel(meta) {
   const panel = document.querySelector("#researchPanel");
   const title = document.querySelector("#panelTitle");
@@ -40,7 +48,9 @@ export function createPanel(meta) {
     ["Last updated", meta.updated],
     ["Catalog adequacy", meta.adequacy],
     ["Fault source", meta.faults],
-    ["Boundary source", meta.boundaries]
+    ["Boundary source", meta.boundaries],
+    ["Boundary citation", meta.boundaryCitation],
+    ["Boundary distribution license", meta.boundaryLicense]
   ].map(([key, value]) => `<dt>${escapeHtml(key)}</dt><dd>${display(value)}</dd>`).join("");
 
   let selected = { type: "region", data: { name: "Global research view" } };
@@ -54,9 +64,13 @@ export function createPanel(meta) {
 
     if (type === "earthquake") {
       const nearest = data.nearestFault;
+      const boundary = data.nearestBoundary;
       const associationCopy = nearest
         ? `Nearest mapped active-fault context: ${display(nearest.faultName)} at ${display(formatDistance(nearest.distanceKm))}. This is geographic context only and is not causal attribution.`
         : "No mapped active-fault association is available within the configured research distance. This must not be interpreted as no fault existing.";
+      const boundaryCopy = boundary
+        ? `Nearest PB2002 plate-boundary context: ${display(boundary.boundaryId)} (${display(platePair(boundary))}) at ${display(formatDistance(boundary.distanceKm))}. Boundary class ${display(boundary.boundaryClass)} and adjacent plate identifiers are source-defined tectonic context only; they do not establish stress transfer, causation, or future-earthquake probability.`
+        : "No PB2002 plate-boundary association is available within the configured 500 km research distance. This must not be interpreted as the event having no tectonic context.";
       content.innerHTML = `
         <p class="summary-copy">Observed earthquake catalog record from the frozen global M6.0+ cohort.</p>
         ${metrics([
@@ -68,11 +82,15 @@ export function createPanel(meta) {
           ["Athena event-day score", data.athenaScore],
           ["Nearest mapped fault", nearest?.faultName],
           ["Distance to mapped fault", formatDistance(nearest?.distanceKm)],
-          ["Plate-boundary context", null],
+          ["PB2002 boundary", boundary?.boundaryId],
+          ["Adjacent plate IDs", platePair(boundary)],
+          ["Boundary class", boundary?.boundaryClass],
+          ["Distance to boundary", formatDistance(boundary?.distanceKm)],
           ["Sequence ID", data.sequenceId],
           ["Sequence position", data.sequencePosition]
         ])}
-        <p class="summary-copy">${associationCopy}</p>`;
+        <p class="summary-copy">${associationCopy}</p>
+        <p class="summary-copy">${boundaryCopy}</p>`;
       return;
     }
 
@@ -117,12 +135,17 @@ export function createPanel(meta) {
 
     if (type === "boundary") {
       content.innerHTML = `
-        <p class="summary-copy">Boundary properties are reported only where supplied; boundary type is never inferred.</p>
+        <p class="summary-copy">PB2002 plate-boundary properties are displayed exactly from the prepared source artifact. They are tectonic context only and are not earthquake causality or prediction.</p>
         ${metrics([
-          ["Plate 1", data.plate_1],
-          ["Plate 2", data.plate_2],
-          ["Boundary type", data.boundary_type],
-          ["Source", data.source]
+          ["Boundary ID", data.boundary_id],
+          ["Step ID", data.step_id],
+          ["Left plate", data.left_plate],
+          ["Right plate", data.right_plate],
+          ["Boundary class", data.boundary_class],
+          ["Polarity", data.polarity],
+          ["Relative velocity", hasValue(data.relative_velocity_mm_per_year) ? `${data.relative_velocity_mm_per_year} mm/yr` : null],
+          ["Source", data.source],
+          ["Citation", meta.boundaryCitation]
         ])}`;
       return;
     }
@@ -134,11 +157,14 @@ export function createPanel(meta) {
         ["Minimum magnitude", meta.minimumMagnitude != null ? `M${Number(meta.minimumMagnitude).toFixed(1)}+` : null],
         ["Mapped fault traces", formatNumber(meta.faultGeometryFeatureCount)],
         ["Event-fault associations", formatNumber(meta.faultAssociationCount)],
+        ["PB2002 boundary steps", formatNumber(meta.plateBoundaryFeatureCount)],
+        ["Event-boundary contexts", formatNumber(meta.plateBoundaryAssociationCount)],
         ["Current global Athena score", null],
         ["Prepared sequence series", meta.availability?.sequences ? "Available" : null],
         ["Prepared plate boundaries", meta.availability?.plate_boundaries ? "Available" : null]
       ])}
-      <p class="summary-copy">${display(meta.faultAssociationSemantics)}</p>`;
+      <p class="summary-copy">${display(meta.faultAssociationSemantics)}</p>
+      <p class="summary-copy">${display(meta.plateBoundaryAssociationSemantics)}</p>`;
   }
 
   select("region", selected.data);
